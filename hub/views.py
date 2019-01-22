@@ -1,4 +1,5 @@
 import constance
+import os
 from django.contrib.auth.decorators import login_required
 from django.core.management import call_command
 from django.db import transaction
@@ -59,9 +60,17 @@ class ExtraDetailRegistrationView(RegistrationView):
         extra_fields = set(form.fields.keys()).difference(standard_fields)
         # Don't save the user unless we successfully store the extra data
         with transaction.atomic():
+            # Get user email in memory
+            new_user_email = request.POST.get('email')
+            # Change email temporary to send it to the webmaster
+            if os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL'):
+                form.instance.email = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
             new_user = super(ExtraDetailRegistrationView, self).register(
                 request, form, *args, **kwargs)
             extra_data = {k: form.cleaned_data[k] for k in extra_fields}
             new_user.extra_details.data.update(extra_data)
             new_user.extra_details.save()
+            # Rewrite the right user email
+            new_user.email = new_user_email
+            new_user.save()
         return new_user
