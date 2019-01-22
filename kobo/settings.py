@@ -468,7 +468,8 @@ WEBPACK_LOADER = {
 
 # Email configuration from dkobo; expects SES
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND',
-    'django.core.mail.backends.filebased.EmailBackend')
+    'django.core.mail.backends.smtp.EmailBackend')
+os.environ['EMAIL_HOST'] = 'mailsrv'
 
 if EMAIL_BACKEND == 'django.core.mail.backends.filebased.EmailBackend':
     EMAIL_FILE_PATH = os.environ.get(
