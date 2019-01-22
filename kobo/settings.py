@@ -454,7 +454,7 @@ See http://celery.readthedocs.org/en/latest/getting-started/brokers/rabbitmq.htm
 CELERY_BROKER_URL = os.environ.get('KPI_BROKER_URL', 'amqp://kpi:kpi@rabbit:5672/kpi')
 
 # http://django-registration-redux.readthedocs.org/en/latest/quickstart.html#settings
-ACCOUNT_ACTIVATION_DAYS = 3
+ACCOUNT_ACTIVATION_DAYS = 15
 REGISTRATION_AUTO_LOGIN = True
 REGISTRATION_EMAIL_HTML = False # Otherwise we have to write HTML templates
 
