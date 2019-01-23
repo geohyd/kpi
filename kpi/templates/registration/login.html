@@ -12,7 +12,7 @@
       {% trans "Forgot?" %}
     </a>
 
-    <input type="submit" value="Login" class="registration__action" />
+    <input type="submit" value="{% trans 'Login' %}" class="registration__action" />
     <input type="hidden" name="next" value="{{ next }}" />
 
     {% if config.REGISTRATION_OPEN %}
