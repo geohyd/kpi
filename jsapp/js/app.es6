@@ -110,7 +110,7 @@ class App extends React.Component {
   render() {
     var assetid = this.props.params.assetid || null;
     return (
-      <DocumentTitle title='KoBoToolbox'>
+      <DocumentTitle title='Survea'>
         <Shortcuts
           name='APP_SHORTCUTS'
           handler={this._handleShortcuts}

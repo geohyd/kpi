@@ -472,7 +472,7 @@ export class FormLanding extends React.Component {
     }
 
     return (
-      <DocumentTitle title={`${docTitle} | KoboToolbox`}>
+      <DocumentTitle title={`${docTitle} | Survea`}>
         <bem.FormView m='form'>
           <bem.FormView__row>
             <bem.FormView__cell m={['columns', 'first']}>
