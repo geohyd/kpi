@@ -146,7 +146,7 @@ export class FormSubScreens extends React.Component {
   renderProjectDownloads() {
     var docTitle = this.state.name || t('Untitled');
     return (
-      <DocumentTitle title={`${docTitle} | KoboToolbox`}>
+      <DocumentTitle title={`${docTitle} | Survea`}>
         <ProjectDownloads asset={this.state} />
       </DocumentTitle>
     );
