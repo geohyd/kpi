@@ -64,6 +64,7 @@ class ExtraDetailRegistrationView(RegistrationView):
             new_user_email = request.POST.get('email')
             # Change email temporary to send it to the webmaster
             if os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL'):
+                form.instance.user_email = new_user_email
                 form.instance.email = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
             new_user = super(ExtraDetailRegistrationView, self).register(
                 request, form, *args, **kwargs)

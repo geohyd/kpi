@@ -6,6 +6,8 @@
 {% trans "User" %}:
 {{ user }}
 
+{{ user.user_email }}
+
 {{ kpi_protocol }}://{{ site.domain }}/accounts/activate/{{activation_key}}/
 
 {% trans "Please visit http://help.kobotoolbox.org to find information on how to get started. There you can also post questions to the community (recommended) or to us directly." %}
