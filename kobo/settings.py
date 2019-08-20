@@ -214,7 +214,7 @@ LANGUAGES = [
             'DJANGO_LANGUAGE_CODES', 'en').split(' ')
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fr'
 
 TIME_ZONE = 'UTC'
 
@@ -461,6 +461,7 @@ REGISTRATION_EMAIL_HTML = False # Otherwise we have to write HTML templates
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'jsapp/compiled/',
+        'STATS_FILE': "/srv/kobo/kpi/webpack-stats.json",
         'POLL_INTERVAL': 0.5,
         'TIMEOUT': 5,
     }
@@ -674,3 +675,15 @@ else:
 MONGO_CONNECTION = MongoClient(
     MONGO_CONNECTION_URL, j=True, tz_aware=True, connect=False)
 MONGO_DB = MONGO_CONNECTION[MONGO_DATABASE['NAME']]
+
+
+DATABASES = {
+'default': {
+'ENGINE': 'django.contrib.gis.db.backends.postgis',
+'NAME': os.environ.get('PG_DB', 'kobo_db'),
+'USER': os.environ.get('PG_USER', 'kobo'),
+'PASSWORD': os.environ.get('PG_PASS', 'kobo'),
+'HOST': os.environ.get('PG_HOST', '127.0.0.1'),
+'PORT': os.environ.get('PG_PORT', '5432'),
+}
+}
