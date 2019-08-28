@@ -22,7 +22,7 @@ class RegistrationForm(registration_forms.RegistrationForm):
         label=_("Username"),
         error_messages={'invalid': USERNAME_INVALID_MESSAGE}
     )
-    name = forms.CharField(
+    """name = forms.CharField(
         label=_('Name'),
         required=False,
     )
@@ -50,11 +50,17 @@ class RegistrationForm(registration_forms.RegistrationForm):
         label=_('Country'),
         required=False,
         choices=(('', ''),) + COUNTRIES,
-    )
+    )"""
 
     class Meta:
         model = User
         fields = [
+            'username',
+            'email'
+            # The 'password' field appears without adding it here; adding it
+            # anyway results in a duplicate
+        ]
+        """fields = [
             'name',
             'organization',
             'username',
@@ -64,4 +70,4 @@ class RegistrationForm(registration_forms.RegistrationForm):
             'gender',
             # The 'password' field appears without adding it here; adding it
             # anyway results in a duplicate
-        ]
+        ]"""
