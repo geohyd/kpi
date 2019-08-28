@@ -1,6 +1,7 @@
 _ = require 'underscore'
 
 choices_templates = require './view.choices.templates'
+accepted_files_templates = require './view.acceptedFiles.templates'
 params_templates = require './view.params.templates'
 row_templates = require './view.row.templates'
 rowDetail_templates = require './view.rowDetail.templates'
@@ -18,10 +19,12 @@ module.exports = do ->
     surveyApp: surveyApp_templates
     surveyDetails: surveyDetails_templates
 
+  templates['AcceptedFilesView.input'] = accepted_files_templates.acceptedFilesInput
   templates['ParamsView.numberParam'] = params_templates.numberParam
   templates['ParamsView.booleanParam'] = params_templates.booleanParam
   templates['xlfListView.addOptionButton']  = choices_templates.addOptionButton
   templates['xlfSurveyDetailView']          = surveyDetails_templates.xlfSurveyDetailView
+  templates['row.mandatorySettingSelector'] = row_templates.mandatorySettingSelector
   templates['row.rowErrorView']             = row_templates.rowErrorView
   templates['row.xlfRowView']               = row_templates.xlfRowView
   templates['row.scoreView']                = row_templates.scoreView
@@ -37,7 +40,6 @@ module.exports = do ->
     # better than 'undefined is not a function'.
     template = templates[id]
     unless template
-      console.log(typeof choices_templates, _.keys(choices_templates))
       throw new Error("Template not available: '#{id}'")
     unless 'function' is typeof template
       throw new Error("Template not a function: '#{id}'")
