@@ -218,7 +218,7 @@ LANGUAGES = [
 
 LANGUAGE_CODE = 'fr-fr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Paris'
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale'),)
 
