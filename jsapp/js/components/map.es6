@@ -11,7 +11,10 @@ import ui from '../ui';
 import classNames from 'classnames';
 import omnivore from '@mapbox/leaflet-omnivore';
 import JSZip from 'jszip';
-
+// antea - Geo-hyd start
+import $ from 'jquery';
+import _ from 'lodash';
+// antea - Geo-hyd end
 import L from 'leaflet/dist/leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat/dist/leaflet-heat';
@@ -73,6 +76,10 @@ export class FormMap extends React.Component {
       fields: [],
       hasGeoPoint: hasGeoPoint,
       submissions: [],
+      // antea - Geo-hyd start
+      layerpoints: {},
+      layersactive: false,
+      // antea - Geo-hyd end
       error: false,
       isFullscreen: false,
       showExpandedLegend: true,
@@ -110,11 +117,14 @@ export class FormMap extends React.Component {
       iconSize: [12, 12]
     });
 
+    // antea - Geo-hyd start
     var map = L.map('data-map', {
       maxZoom: 17,
       scrollWheelZoom: true,
       preferCanvas: true
     });
+    this.state.map = map;
+    // antea - Geo-hyd start
 
     streets.addTo(map);
     controls.addTo(map);
@@ -242,8 +252,66 @@ export class FormMap extends React.Component {
     if (nextViewBy) fq.push(this.nameOfFieldInGroup(nextViewBy));
 
     const sort = [{id: '_id', desc: true}];
-
+    // antea - Geo-hyd start
+    let self = this;
     // TODO: handle forms with over 5000 results
+    dataInterface.getSubmissions(this.props.asset.uid, 5000, 0, sort,).done((submissions) => {
+      submissions.forEach(function (submission) {
+        Object.keys(submission).forEach(function (e) {
+          if (typeof submission[e] === 'string') {
+			  let x_string = submission[e].split(';');
+			  if (x_string.length === 1) {
+				  //Point, pas besoin de traiter
+				  let point_string = x_string[0].split(' ');
+				  let x_float = parseFloat(point_string[0]);
+				  let y_float = parseFloat(point_string[1]);
+				  if (Number.isNaN(x_float) || Number.isNaN(y_float)) {
+					  // console.log('Malformed coordinates : ' + submission[e]);
+				  } else {
+					if (!(Object.keys(self.state.layerpoints).includes(e))){
+					  self.state.layerpoints[e] = L.featureGroup();
+					  self.state.layerpoints[e].on('click', self.launchSubmissionModal);
+					}
+					let marker = L.marker([x_float, y_float], {sId: submission._id});
+					self.state.layerpoints[e].addLayer(marker);
+				  }
+			  } else {
+				let points = [];
+				for (let point of x_string) {
+					let point_string = point.split(' ');
+					let y_float = parseFloat(point_string[0]);
+					let x_float = parseFloat(point_string[1]);
+					if (Number.isNaN(x_float) || Number.isNaN(y_float)) {
+						// console.log('Malformed coordinates : ' + submission[e]);
+					  return;
+					}
+					points.push([y_float, x_float]);
+				}
+				if (points[0][0] === _.last(points)[0] && points[0][1] === _.last(points)[1]) {
+					// console.log('polygone', points);
+				  if (!(Object.keys(self.state.layerpoints).includes(e))){
+					self.state.layerpoints[e] = L.featureGroup();
+					  self.state.layerpoints[e].on('click', self.launchSubmissionModal);
+				  }
+				  let polygon = L.polygon(points, {sId: submission._id});
+				  self.state.layerpoints[e].addLayer(polygon);
+				} else {
+					// console.log('ligne', points);
+				  if (!(Object.keys(self.state.layerpoints).includes(e))){
+					self.state.layerpoints[e] = L.featureGroup();
+					  self.state.layerpoints[e].on('click', self.launchSubmissionModal);
+				  }
+				  let polyline = L.polyline(points, {sId: submission._id});
+				  // L.path.touchHelper(polyline, {sId: submission._id}).addTo(self.state.layerpoints[e]);
+				  self.state.layerpoints[e].addLayer(polyline);
+				}
+			  }
+			}
+		});
+      });
+    });
+    // antea - Geo-hyd end
+
     dataInterface.getSubmissions(this.props.asset.uid, 5000, 0, sort, fq).done((data) => {
       if (selectedQuestion) {
         data.forEach(function(row, i) {
@@ -639,6 +707,29 @@ export class FormMap extends React.Component {
     return fieldName;
   }
 
+  // antea - Geo-hyd start
+  toggleLayerList() {
+    this.setState({
+      layersactive: !this.state.layersactive
+    }, () => this.showSubmissions());
+  }
+  showSubmissions(){
+    let self = this;
+    if(self.state.layersactive){
+      Object.keys(self.state.layerpoints).forEach(function(e){
+        if($(document.getElementById(e)).prop('checked'))
+          self.state.map.addLayer(self.state.layerpoints[e]);
+      });
+      document.getElementsByClassName('divlayers')[0].style.display = '';
+    } else{
+		Object.keys(self.state.layerpoints).forEach(function(e){
+        self.state.map.removeLayer(self.state.layerpoints[e]);
+      });
+      document.getElementsByClassName('divlayers')[0].style.display = 'none';
+    }
+  }
+  // antea - Geo-hyd end
+
   render () {
     if (!this.state.hasGeoPoint) {
       return (
@@ -684,6 +775,38 @@ export class FormMap extends React.Component {
     if (this.state.isFullscreen) {
       formViewModifiers.push('fullscreen');
     }
+// antea - Geo-hyd start
+    let self = this;
+
+    const layersstyle = {
+		bottom: '50px',
+		position: 'absolute',
+		display: 'none'
+    };
+    const buttonstyle = {
+      'margin-top': '108px'
+    };
+
+
+    const items = [];
+    Object.keys(self.state.layerpoints).forEach(function (e) {
+      items.push(<div>
+            <label>
+                <input
+                  id={e}
+                  defaultChecked='true'
+                  onChange={function () {
+                    if($(document.getElementById(e)).prop('checked'))
+                      self.state.map.addLayer(self.state.layerpoints[e]);
+                    else
+                      self.state.map.removeLayer(self.state.layerpoints[e]);
+                  }}
+                  type='checkbox'/>
+              {e}
+            </label>
+        </div>);
+    });
+// antea - Geo-hyd end
 
     return (
       <bem.FormView m={formViewModifiers} className='right-tooltip'>
@@ -710,6 +833,29 @@ export class FormMap extends React.Component {
           data-tip={t('Map display settings')}>
           <i className='k-icon-settings' />
         </bem.FormView__mapButton>
+        {/*antea - Geo-hyd start*/}
+        <bem.FormView__mapButton
+          m={'display-all-geom'}
+          style={buttonstyle}
+          onClick={this.toggleLayerList}
+          data-tip={t('Display all geometry')}>
+          <i className='k-icon-layer'/>
+        </bem.FormView__mapButton>
+        <div
+          style={layersstyle}
+          className={'divlayers'}>
+            <ui.PopoverMenu type='viewby-menu'
+                            triggerLabel={t('Layers list')}
+                            m={'above'}
+                            clearPopover={this.state.clearDisaggregatedPopover}
+                            blurEventDisabled>
+              <bem.PopoverMenu__heading>
+                {t('Layers available')}
+              </bem.PopoverMenu__heading>
+              {items}
+            </ui.PopoverMenu>
+        </div>
+        {/*antea - Geo-hyd start*/}
         {!viewby &&
           <bem.FormView__mapButton m={'heatmap'}
             onClick={this.showHeatmap}
@@ -819,3 +965,66 @@ export class FormMap extends React.Component {
 reactMixin(FormMap.prototype, Reflux.ListenerMixin);
 
 export default FormMap;
+
+// !(function() {
+//     L.Path.TouchHelper = L[L.Layer ? 'Layer' : 'Class'].extend({
+//         options: {
+//             extraWeight: 25
+//         },
+//
+//         initialize: function(path, options) {
+//             L.setOptions(this, options);
+//             this._sourceLayer = path;
+//             var touchPathOptions = L.extend({}, path.options, { opacity: 0, fillOpacity: 0 });
+//             touchPathOptions.weight += this.options.extraWeight;
+//
+//             if (path.eachLayer) {
+//                 this._layer = L.layerGroup();
+//                 path.eachLayer(function(l) {
+//                     if (l.eachLayer || l.getLatLngs) {
+//                         this._layer.addLayer(L.path.touchHelper(l, L.extend({}, options, {parentLayer: this._layer})));
+//                     }
+//                 }, this);
+//             } else if (path.getLatLngs) {
+//                 this._layer = new path.constructor(path.getLatLngs(), touchPathOptions);
+//                 this._layer.feature = path.feature;
+//             } else {
+//                 throw new Error('Unknown layer type, neither a group or a path');
+//             }
+//
+//             this._layer.on('click dblclick mouseover mouseout mousemove', function(e) {
+//                 (this.options.parentLayer ? this.options.parentLayer : path).fire(e.type, e);
+//             }, this);
+//         },
+//
+//         onAdd: function(map) {
+//             this._map = map;
+//             this._layer.addTo(map);
+//             if (!this.options.parentLayer) {
+//                 map.on('layerremove', this._onLayerRemoved, this);
+//             }
+//         },
+//
+//         onRemove: function(map) {
+//             map.removeLayer(this._layer);
+//             map.off('layerremove', this._onLayerRemoved, this);
+//             this._map = null;
+//         },
+//
+//         addTo: function(map) {
+//             map.addLayer(this);
+//         },
+//
+//         _onLayerRemoved: function(e) {
+//             if (e.layer === this._sourceLayer) {
+//                 this._map.removeLayer(this);
+//             }
+//         },
+//     });
+//
+//     L.path = L.path || {};
+//
+//     L.path.touchHelper = function(path, options) {
+//         return new L.Path.TouchHelper(path, options);
+//     }
+// })();
