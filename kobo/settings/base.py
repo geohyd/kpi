@@ -492,7 +492,6 @@ WEBPACK_LOADER = {
 # Email configuration from dkobo; expects SES
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.filebased.EmailBackend')
 
-os.environ['EMAIL_HOST'] = 'mailsrv'
 
 if EMAIL_BACKEND == 'django.core.mail.backends.filebased.EmailBackend':
     EMAIL_FILE_PATH = os.environ.get(
@@ -720,3 +719,6 @@ DATABASES = {
 'PORT': os.environ.get('PG_PORT', '5432'),
 }
 }
+
+# LANG='en_US.UTF-8'
+# LC_ALL='en_US.UTF-8'

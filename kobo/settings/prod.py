@@ -18,3 +18,4 @@ if os.environ.get('AUTH_LDAP_3_ACTIVE').lower() == 'true':
     AUTH_LDAP_3_SERVER_URI = os.environ.get('AUTH_LDAP_3_SERVER_URI', '')
     AUTH_LDAP_3_USER_DN_TEMPLATE = os.environ.get('AUTH_LDAP_3_USER_DN_TEMPLATE', '')
     AUTHENTICATION_BACKENDS = ("kpi.backends_ldap.LDAPBackend3",) + AUTHENTICATION_BACKENDS
+
