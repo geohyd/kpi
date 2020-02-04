@@ -46,3 +46,29 @@ if os.environ.get('AUTH_LDAP_3_ACTIVE') and os.environ.get('AUTH_LDAP_3_ACTIVE')
     AUTH_LDAP_3_USER_ATTR_MAP = AUTH_LDAP_USER_ATTR_MAP
     AUTHENTICATION_BACKENDS = ("kpi.backends_ldap.LDAPBackend3",) + AUTHENTICATION_BACKENDS
 
+CONSTANCE_CONFIG = {
+    'REGISTRATION_OPEN': (True, 'Allow new users to register accounts for '
+                                'themselves'),
+    'TERMS_OF_SERVICE_URL': ('https://survea-rec.geo-hyd.net/',
+                            'URL for terms of service document'),
+    'PRIVACY_POLICY_URL': ('https://survea-rec.geo-hyd.net/',
+                          'URL for privacy policy'),
+    'SOURCE_CODE_URL': ('https://github.com/geohyd/kpi',
+                        'URL of source code repository. When empty, a link '
+                        'will not be shown in the user interface'),
+    'SUPPORT_URL': (os.environ.get('KOBO_SUPPORT_URL',
+                                   'http://helpdesk/osticket/'),
+                    'URL of user support portal. When empty, a link will not '
+                    'be shown in the user interface'),
+    'SUPPORT_EMAIL': (os.environ.get('KOBO_SUPPORT_EMAIL') or
+                        os.environ.get('DEFAULT_FROM_EMAIL',
+                                       'jonathan.durand@anteagroup.com'),
+                      'Email address for users to contact, e.g. when they '
+                      'encounter unhandled errors in the application'),
+    'ALLOW_UNSECURED_HOOK_ENDPOINTS': (True,
+                                       'Allow the use of unsecured endpoints for hooks. '
+                                       '(e.g http://hook.example.com)'),
+    'HOOK_MAX_RETRIES': (3,
+                         'Number of times the system will retry '
+                         'to send data to remote server before giving up')
+}
