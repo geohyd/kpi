@@ -11,7 +11,7 @@ import {t} from '../../utils';
 import {MODAL_TYPES} from '../../constants';
 
 //const RESTServicesSupportUrl = 'http://help.kobotoolbox.org/managing-your-project-s-data/rest-services';
-const RESTServicesSupportUrl = 'http://helpdesk/osticket/';
+const RESTServicesSupportUrl = 'http://contact-helpdesk/';
 
 export default class RESTServicesList extends React.Component {
   constructor(props){
