@@ -47,7 +47,6 @@ if os.environ.get('AUTH_LDAP_3_ACTIVE') and os.environ.get('AUTH_LDAP_3_ACTIVE')
     AUTHENTICATION_BACKENDS = ("kpi.backends_ldap.LDAPBackend3",) + AUTHENTICATION_BACKENDS
 
 
-KPI_URL
 
 CONSTANCE_CONFIG = {
     'REGISTRATION_OPEN': (True, 'Allow new users to register accounts for '
