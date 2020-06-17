@@ -79,14 +79,14 @@ export class ProjectDownloads extends React.Component {
       let url = this.props.asset.deployment__data_download_links[
         this.state.type
       ];
-      if (['xls', 'csv', 'spss_labels'].includes(this.state.type)) {
+      if (['xls', 'csv', 'spss_labels', 'antea_env_fiche_sol_xlsx'].includes(this.state.type)) {
         url = `${dataInterface.rootUrl}/exports/`; // TODO: have the backend pass the URL in the asset
         let postData = {
           source: this.props.asset.url,
           type: this.state.type,
           fields_from_all_versions: this.state.fieldsFromAllVersions
         };
-        if (['xls', 'csv'].includes(this.state.type)) {
+        if (['xls', 'csv', 'antea_env_fiche_sol_xlsx'].includes(this.state.type)) {
           // Only send extra parameters when necessary
           Object.assign(postData, {
             lang: this.state.lang,
@@ -255,9 +255,10 @@ export class ProjectDownloads extends React.Component {
                         <option value='kml_legacy'>{t('GPS coordinates (KML)')}</option>
                         <option value='analyser_legacy'>{t('Excel Analyser')}</option>
                         <option value='spss_labels'>{t('SPSS Labels')}</option>
+						<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
                       </select>
                     </bem.FormModal__item>
-                  , ['xls', 'csv', 'spss_labels'].includes(this.state.type) ? [
+                  , ['xls', 'csv', 'spss_labels', 'antea_env_fiche_sol_xlsx'].includes(this.state.type) ? [
                       ['xls', 'csv'].includes(this.state.type) ? [
                         <bem.FormModal__item key={'x'} m='export-format'>
                           <label htmlFor='lang'>{t('Value and header format')}</label>
@@ -340,7 +341,7 @@ export class ProjectDownloads extends React.Component {
                       <bem.FormView__group m='items' key={item.uid}
                         className={timediff < 45 ? 'recent' : ''}>
                         <bem.FormView__label m='type'>
-                          {item.data.type == 'spss_labels' ? 'spss' : item.data.type}
+                          {item.data.type == 'spss_labels' ? 'spss' : item.data.type == 'antea_env_fiche_sol_xlsx' ? 'sol' : item.data.type}
                         </bem.FormView__label>
                         <bem.FormView__label m='date'>
                           {formatTime(item.date_created)}

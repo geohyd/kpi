@@ -402,6 +402,7 @@ class ExportTask(ImportExportTask):
     last_submission_time = models.DateTimeField(null=True)
     result = PrivateFileField(upload_to=export_upload_to, max_length=380)
 
+
     COPY_FIELDS = (
         '_id',
         '_uuid',
@@ -440,6 +441,8 @@ class ExportTask(ImportExportTask):
             extension = 'xlsx'
         elif export_type == 'spss_labels':
             extension = 'zip'
+        elif export_type == 'antea_env_fiche_sol_xlsx':
+            extension = 'fichesol'
         else:
             extension = export_type
 
@@ -485,15 +488,17 @@ class ExportTask(ImportExportTask):
         ).lower() == 'true'
         group_sep = self.data.get('group_sep', '/')
         translations = pack.available_translations
+
         lang = self.data.get('lang', None) or next(iter(translations), None)
+        lang_header = self.data.get('lang_header', lang) or next(iter(translations), None)
         try:
             # If applicable, substitute the constants that formpack expects for
             # friendlier language strings used by the API
             lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang]
+            lang_header = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang_header]
         except KeyError:
             pass
         tag_cols_for_header = self.data.get('tag_cols_for_header', ['hxl'])
-
         return {
             'versions': pack.versions.keys(),
             'group_sep': group_sep,
@@ -502,6 +507,7 @@ class ExportTask(ImportExportTask):
             'copy_fields': self.COPY_FIELDS,
             'force_index': True,
             'tag_cols_for_header': tag_cols_for_header,
+            'lang_header' : lang_header,
         }
 
     def _record_last_submission_time(self, submission_stream):
@@ -555,9 +561,9 @@ class ExportTask(ImportExportTask):
             raise Exception('the source must be deployed prior to export')
 
         export_type = self.data.get('type', '').lower()
-        if export_type not in ('xls', 'csv', 'spss_labels'):
+        if export_type not in ('xls', 'csv', 'spss_labels', 'antea_env_fiche_sol_xlsx'):
             raise NotImplementedError(
-                'only `xls`, `csv`, and `spss_labels` are valid export types')
+                'only `xls`, `csv`,  `spss_labels`, and `antea_env_fiche_sol_xlsx` are valid export types, not %s' %(export_type))
 
         # Take this opportunity to do some housekeeping
         self.log_and_mark_stuck_as_errored(self.user, source_url)
@@ -613,6 +619,11 @@ class ExportTask(ImportExportTask):
                     output_file.write(xlsx_output_file.read())
             elif export_type == 'spss_labels':
                 export.to_spss_labels(output_file)
+            elif export_type == 'antea_env_fiche_sol_xlsx':
+                from rest_framework.authtoken.models import Token
+                token = Token.objects.get(user=self.user)
+                line = export.to_anteafichesol(output_file, submission_stream, token.key)
+                output_file.write((line + u"\r\n").encode('utf-8'))
 
         # Restore the FileField to its typical state
         self.result.open('rb')
