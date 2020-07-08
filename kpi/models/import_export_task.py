@@ -372,6 +372,12 @@ class ExportTask(ImportExportTask):
               response values. Specify `_xml` to use question and choice names
               instead of labels. Leave unset, or use `_default` for labels in
               the default language
+    * `header_lang`: optional; the name of the translation to be used just for
+              headers values. Specify `_xml` to use question names in headers
+              instead of labels. Use `_default` for headers labels in the
+              default language. Leave unset for override it and use lang arg
+              value.	              value.
+              Need this PR : https://github.com/kobotoolbox/formpack/pull/215
     * `hierarchy_in_labels`: optional; when `true`, include the labels for all
                              ancestor groups in each field label, separated by
                              `group_sep`. Defaults to `False`
@@ -441,8 +447,17 @@ class ExportTask(ImportExportTask):
             extension = 'xlsx'
         elif export_type == 'spss_labels':
             extension = 'zip'
-        elif export_type == 'antea_env_fiche_sol_xlsx':
-            extension = 'fichesol'
+        elif "antea" in export_type:
+            if "xlsx" in export_type:
+                extension = 'xlsx'
+            elif "docx" in export_type:
+                extension = 'docx'
+            elif "zip" in export_type:
+                extension = 'zip'
+            elif "pdf" in export_type:
+                extension = 'pdf'
+            else:
+                extension = 'xlsx'
         else:
             extension = export_type
 
@@ -490,12 +505,12 @@ class ExportTask(ImportExportTask):
         translations = pack.available_translations
 
         lang = self.data.get('lang', None) or next(iter(translations), None)
-        lang_header = self.data.get('lang_header', lang) or next(iter(translations), None)
+        header_lang = self.data.get('header_lang', lang)
         try:
             # If applicable, substitute the constants that formpack expects for
             # friendlier language strings used by the API
             lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang]
-            lang_header = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang_header]
+            header_lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[header_lang]
         except KeyError:
             pass
         tag_cols_for_header = self.data.get('tag_cols_for_header', ['hxl'])
@@ -507,7 +522,7 @@ class ExportTask(ImportExportTask):
             'copy_fields': self.COPY_FIELDS,
             'force_index': True,
             'tag_cols_for_header': tag_cols_for_header,
-            'lang_header' : lang_header,
+            'header_lang' : header_lang,
         }
 
     def _record_last_submission_time(self, submission_stream):
@@ -561,9 +576,10 @@ class ExportTask(ImportExportTask):
             raise Exception('the source must be deployed prior to export')
 
         export_type = self.data.get('type', '').lower()
-        if export_type not in ('xls', 'csv', 'spss_labels', 'antea_env_fiche_sol_xlsx'):
-            raise NotImplementedError(
-                'only `xls`, `csv`,  `spss_labels`, and `antea_env_fiche_sol_xlsx` are valid export types, not %s' %(export_type))
+        if export_type not in ('xls', 'csv', 'spss_labels'):
+            if 'antea_' not in export_type:
+                raise NotImplementedError(
+                    'only `xls`, `csv`,  `spss_labels`, and `antea_*` are valid export types, not %s' %(export_type))
 
         # Take this opportunity to do some housekeeping
         self.log_and_mark_stuck_as_errored(self.user, source_url)
@@ -582,6 +598,13 @@ class ExportTask(ImportExportTask):
         # recent timestamp
         submission_stream = self._record_last_submission_time(
             submission_stream)
+
+        #INIT option for fiche sol export temp Excel
+        if 'antea_' in export_type:
+            self.data['hierarchy_in_labels'] = 'False'
+            self.data['header_lang'] = False
+            self.data['lang'] = None
+            self.data['fields_from_all_versions'] = 'False'
 
         options = self._build_export_options(pack)
         export = pack.export(**options)
@@ -619,11 +642,11 @@ class ExportTask(ImportExportTask):
                     output_file.write(xlsx_output_file.read())
             elif export_type == 'spss_labels':
                 export.to_spss_labels(output_file)
-            elif export_type == 'antea_env_fiche_sol_xlsx':
+            elif "antea" in export_type:
                 from rest_framework.authtoken.models import Token
                 token = Token.objects.get(user=self.user)
-                line = export.to_anteafichesol(output_file, submission_stream, token.key)
-                output_file.write((line + u"\r\n").encode('utf-8'))
+                xform_id = self.data["source"].split("/")[-2]
+                export.to_antea(settings, output_file, submission_stream, xform_id, token.key, self.user, export_type)
 
         # Restore the FileField to its typical state
         self.result.open('rb')
