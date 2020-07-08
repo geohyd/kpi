@@ -260,7 +260,7 @@ export class ProjectDownloads extends React.Component {
 						</optgroup>
                       </select>
                     </bem.FormModal__item>
-                  , (['xls', 'csv', 'spss_labels'].includes(this.state.type) || this.state.type.startsWith("antea_"))  ? [
+                  , (['xls', 'csv', 'spss_labels'].includes(this.state.type))  ? [
                       ['xls', 'csv'].includes(this.state.type) ? [
                         <bem.FormModal__item key={'x'} m='export-format'>
                           <label htmlFor='lang'>{t('Value and header format')}</label>
@@ -304,7 +304,12 @@ export class ProjectDownloads extends React.Component {
                           />
                         </bem.FormModal__item>
                       : null
-                    ] : null
+                    ] :  (this.state.type.startsWith("antea_")) ? [
+						<bem.FormModal__item key={'antea-a'} m='antea-export'>
+                          <label>{t('Attention, votre formulaire doit correspondre au type d\'export sélectionné.')}</label>
+                        </bem.FormModal__item>
+						
+					] : null
                   , this.state.type.indexOf('_legacy') > 0 ?
                     <bem.FormModal__item m='downloads' key={'d'}>
                       <iframe src={
