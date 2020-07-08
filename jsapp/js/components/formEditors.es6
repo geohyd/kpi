@@ -255,7 +255,9 @@ export class ProjectDownloads extends React.Component {
                         <option value='kml_legacy'>{t('GPS coordinates (KML)')}</option>
                         <option value='analyser_legacy'>{t('Excel Analyser')}</option>
                         <option value='spss_labels'>{t('SPSS Labels')}</option>
-						<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
+						<optgroup label={t('Antea exports')}>
+							<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
+						</optgroup>
                       </select>
                     </bem.FormModal__item>
                   , (['xls', 'csv', 'spss_labels'].includes(this.state.type) || this.state.type.startsWith("antea_"))  ? [
