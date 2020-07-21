@@ -599,13 +599,6 @@ class ExportTask(ImportExportTask):
         submission_stream = self._record_last_submission_time(
             submission_stream)
 
-        #INIT option for fiche sol export temp Excel
-        if 'antea_' in export_type:
-            self.data['hierarchy_in_labels'] = 'False'
-            self.data['header_lang'] = False
-            self.data['lang'] = None
-            self.data['fields_from_all_versions'] = 'False'
-
         options = self._build_export_options(pack)
         export = pack.export(**options)
         filename = self._build_export_filename(export, export_type)
