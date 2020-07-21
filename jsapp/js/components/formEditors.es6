@@ -86,12 +86,36 @@ export class ProjectDownloads extends React.Component {
           type: this.state.type,
           fields_from_all_versions: this.state.fieldsFromAllVersions
         };
-        if (['xls', 'csv'].includes(this.state.type) || this.state.type.startsWith("antea_")) {
+        if (['xls', 'csv'].includes(this.state.type)) {
           // Only send extra parameters when necessary
           Object.assign(postData, {
             lang: this.state.lang,
             hierarchy_in_labels: this.state.hierInLabels,
             group_sep: this.state.groupSep
+          });
+        }
+		if (this.state.type.startsWith("antea_")) {
+          // Only send extra parameters when necessary
+          Object.assign(postData, {
+            lang: '_default',
+            group_sep: '-',
+			header_lang : false,
+			fields_from_all_versions : 'false',
+			hierarchy_in_labels : 'true'
+			
+          });
+        }
+		//TODO : remove this if and update template before commit
+		if (this.state.type.startsWith("antea_env_fiche_sol_xlsx")) {
+          // Only send extra parameters when necessary
+          Object.assign(postData, {
+            lang: '_default',
+            hierarchy_in_labels: false,
+            group_sep: '-',
+			header_lang : false,
+			fields_from_all_versions : 'false',
+			//hierarchy_in_labels :'true'
+			
           });
         }
         $.ajax({
@@ -257,6 +281,7 @@ export class ProjectDownloads extends React.Component {
                         <option value='spss_labels'>{t('SPSS Labels')}</option>
 						<optgroup label={t('Antea exports')}>
 							<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
+							<option value='antea_eau_fiche_pr_xlsx'>{t('Antea EAU Fiche PR (XLSX)')}</option>
 						</optgroup>
                       </select>
                     </bem.FormModal__item>
@@ -348,7 +373,7 @@ export class ProjectDownloads extends React.Component {
                       <bem.FormView__group m='items' key={item.uid}
                         className={timediff < 45 ? 'recent' : ''}>
                         <bem.FormView__label m='type'>
-                          {item.data.type == 'spss_labels' ? 'spss' : item.data.type == 'antea_env_fiche_sol_xlsx' ? 'sol' : item.data.type}
+                          {item.data.type == 'spss_labels' ? 'spss' : item.data.type.startsWith("antea_") ? 'Antea' : item.data.type}
                         </bem.FormView__label>
                         <bem.FormView__label m='date'>
                           {formatTime(item.date_created)}
