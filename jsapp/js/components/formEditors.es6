@@ -79,7 +79,7 @@ export class ProjectDownloads extends React.Component {
       let url = this.props.asset.deployment__data_download_links[
         this.state.type
       ];
-      if (['xls', 'csv', 'spss_labels'].includes(this.state.type)) {
+      if (['xls', 'csv', 'spss_labels'].includes(this.state.type) || this.state.type.startsWith("antea_")) {
         url = `${dataInterface.rootUrl}/exports/`; // TODO: have the backend pass the URL in the asset
         let postData = {
           source: this.props.asset.url,
@@ -92,6 +92,30 @@ export class ProjectDownloads extends React.Component {
             lang: this.state.lang,
             hierarchy_in_labels: this.state.hierInLabels,
             group_sep: this.state.groupSep
+          });
+        }
+		if (this.state.type.startsWith("antea_")) {
+          // Only send extra parameters when necessary
+          Object.assign(postData, {
+            lang: '_default',
+            group_sep: '-',
+			header_lang : false,
+			fields_from_all_versions : 'false',
+			hierarchy_in_labels : 'true'
+			
+          });
+        }
+		//TODO : remove this if and update template before commit
+		if (this.state.type.startsWith("antea_env_fiche_sol_xlsx")) {
+          // Only send extra parameters when necessary
+          Object.assign(postData, {
+            lang: '_default',
+            hierarchy_in_labels: false,
+            group_sep: '-',
+			header_lang : false,
+			fields_from_all_versions : 'false',
+			//hierarchy_in_labels :'true'
+			
           });
         }
         $.ajax({
@@ -255,9 +279,13 @@ export class ProjectDownloads extends React.Component {
                         <option value='kml_legacy'>{t('GPS coordinates (KML)')}</option>
                         <option value='analyser_legacy'>{t('Excel Analyser')}</option>
                         <option value='spss_labels'>{t('SPSS Labels')}</option>
+						<optgroup label={t('Antea exports')}>
+							<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
+							<option value='antea_eau_fiche_pr_xlsx'>{t('Antea EAU Fiche PR (XLSX)')}</option>
+						</optgroup>
                       </select>
                     </bem.FormModal__item>
-                  , ['xls', 'csv', 'spss_labels'].includes(this.state.type) ? [
+                  , (['xls', 'csv', 'spss_labels'].includes(this.state.type))  ? [
                       ['xls', 'csv'].includes(this.state.type) ? [
                         <bem.FormModal__item key={'x'} m='export-format'>
                           <label htmlFor='lang'>{t('Value and header format')}</label>
@@ -301,7 +329,12 @@ export class ProjectDownloads extends React.Component {
                           />
                         </bem.FormModal__item>
                       : null
-                    ] : null
+                    ] :  (this.state.type.startsWith("antea_")) ? [
+						<bem.FormModal__item key={'antea-a'} m='antea-export'>
+                          <label>{t('Attention, votre formulaire doit correspondre au type d\'export sélectionné.')}</label>
+                        </bem.FormModal__item>
+						
+					] : null
                   , this.state.type.indexOf('_legacy') > 0 ?
                     <bem.FormModal__item m='downloads' key={'d'}>
                       <iframe src={
@@ -340,7 +373,7 @@ export class ProjectDownloads extends React.Component {
                       <bem.FormView__group m='items' key={item.uid}
                         className={timediff < 45 ? 'recent' : ''}>
                         <bem.FormView__label m='type'>
-                          {item.data.type == 'spss_labels' ? 'spss' : item.data.type}
+                          {item.data.type == 'spss_labels' ? 'spss' : item.data.type.startsWith("antea_") ? 'Antea' : item.data.type}
                         </bem.FormView__label>
                         <bem.FormView__label m='date'>
                           {formatTime(item.date_created)}

@@ -372,6 +372,12 @@ class ExportTask(ImportExportTask):
               response values. Specify `_xml` to use question and choice names
               instead of labels. Leave unset, or use `_default` for labels in
               the default language
+    * `header_lang`: optional; the name of the translation to be used just for
+              headers values. Specify `_xml` to use question names in headers
+              instead of labels. Use `_default` for headers labels in the
+              default language. Leave unset for override it and use lang arg
+              value.	              value.
+              Need this PR : https://github.com/kobotoolbox/formpack/pull/215
     * `hierarchy_in_labels`: optional; when `true`, include the labels for all
                              ancestor groups in each field label, separated by
                              `group_sep`. Defaults to `False`
@@ -401,6 +407,7 @@ class ExportTask(ImportExportTask):
     uid = KpiUidField(uid_prefix='e')
     last_submission_time = models.DateTimeField(null=True)
     result = PrivateFileField(upload_to=export_upload_to, max_length=380)
+
 
     COPY_FIELDS = (
         '_id',
@@ -440,6 +447,17 @@ class ExportTask(ImportExportTask):
             extension = 'xlsx'
         elif export_type == 'spss_labels':
             extension = 'zip'
+        elif "antea" in export_type:
+            if "xlsx" in export_type:
+                extension = 'xlsx'
+            elif "docx" in export_type:
+                extension = 'docx'
+            elif "zip" in export_type:
+                extension = 'zip'
+            elif "pdf" in export_type:
+                extension = 'pdf'
+            else:
+                extension = 'xlsx'
         else:
             extension = export_type
 
@@ -485,15 +503,17 @@ class ExportTask(ImportExportTask):
         ).lower() == 'true'
         group_sep = self.data.get('group_sep', '/')
         translations = pack.available_translations
+
         lang = self.data.get('lang', None) or next(iter(translations), None)
+        header_lang = self.data.get('header_lang', lang)
         try:
             # If applicable, substitute the constants that formpack expects for
             # friendlier language strings used by the API
             lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang]
+            header_lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[header_lang]
         except KeyError:
             pass
         tag_cols_for_header = self.data.get('tag_cols_for_header', ['hxl'])
-
         return {
             'versions': pack.versions.keys(),
             'group_sep': group_sep,
@@ -502,6 +522,7 @@ class ExportTask(ImportExportTask):
             'copy_fields': self.COPY_FIELDS,
             'force_index': True,
             'tag_cols_for_header': tag_cols_for_header,
+            'header_lang' : header_lang,
         }
 
     def _record_last_submission_time(self, submission_stream):
@@ -556,8 +577,9 @@ class ExportTask(ImportExportTask):
 
         export_type = self.data.get('type', '').lower()
         if export_type not in ('xls', 'csv', 'spss_labels'):
-            raise NotImplementedError(
-                'only `xls`, `csv`, and `spss_labels` are valid export types')
+            if 'antea_' not in export_type:
+                raise NotImplementedError(
+                    'only `xls`, `csv`,  `spss_labels`, and `antea_*` are valid export types, not %s' %(export_type))
 
         # Take this opportunity to do some housekeeping
         self.log_and_mark_stuck_as_errored(self.user, source_url)
@@ -613,6 +635,11 @@ class ExportTask(ImportExportTask):
                     output_file.write(xlsx_output_file.read())
             elif export_type == 'spss_labels':
                 export.to_spss_labels(output_file)
+            elif "antea" in export_type:
+                from rest_framework.authtoken.models import Token
+                token = Token.objects.get(user=self.user)
+                xform_id = self.data["source"].split("/")[-2]
+                export.to_antea(settings, output_file, submission_stream, xform_id, token.key, self.user, export_type)
 
         # Restore the FileField to its typical state
         self.result.open('rb')
