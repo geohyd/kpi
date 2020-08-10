@@ -282,6 +282,7 @@ export class ProjectDownloads extends React.Component {
 						<optgroup label={t('Antea exports')}>
 							<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
 							<option value='antea_eau_fiche_pr_xlsx'>{t('Antea EAU Fiche PR (XLSX)')}</option>
+							<option value='antea_json'>{t('JSON')}</option>
 						</optgroup>
                       </select>
                     </bem.FormModal__item>
