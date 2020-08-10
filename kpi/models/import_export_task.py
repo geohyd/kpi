@@ -457,7 +457,7 @@ class ExportTask(ImportExportTask):
             elif "pdf" in export_type:
                 extension = 'pdf'
             else:
-                extension = 'xlsx'
+                extension = export_type.split("_")[-1]
         else:
             extension = export_type
 
