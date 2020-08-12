@@ -36,7 +36,7 @@ $headerAccountTextColor: #dbedf7;
   .header__logo {
     width: 175px;
     height: 80px;
-    background: url("../img/kobologo.svg") no-repeat left bottom;
+    background: url("../img/kobologo.svg") no-repeat left center;
     background-size: contain;
     display: block;
   }
@@ -395,8 +395,8 @@ $headerAccountTextColor: #dbedf7;
     }
 
     .header__logo {
-      background: url("../img/kobologoS.svg") no-repeat left center;
-      background-size: 125%;
+      background: url("../img/kobologoS.svg") no-repeat center center;
+      background-size: 275%;
       width: 40px;
     }
   }
