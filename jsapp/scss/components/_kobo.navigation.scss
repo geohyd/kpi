@@ -3,7 +3,8 @@
 $headerAccountTextColor: #dbedf7;
 
 .k-header__bar {
-  background-color: $layout-header-bg-color;
+  /* background-color: $layout-header-bg-color; */
+  background-color: #1a1b1c;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
   position: absolute;
   min-height: 64px;
@@ -34,7 +35,7 @@ $headerAccountTextColor: #dbedf7;
 
   .header__logo {
     width: 175px;
-    height: 40px;
+    height: 80px;
     background: url("../img/kobologo.svg") no-repeat left bottom;
     background-size: contain;
     display: block;
