@@ -203,7 +203,7 @@ class SearchCollectionList extends Reflux.Component {
       docTitle = t('Library');
     }
     return (
-      <DocumentTitle title={`${docTitle} | Survea`}>
+      <DocumentTitle title={`Survea - ${docTitle}`}>
         <Dropzone
           onDrop={this.dropFiles}
           disableClick

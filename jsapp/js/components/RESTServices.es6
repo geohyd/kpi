@@ -16,7 +16,7 @@ export default class RESTServices extends React.Component {
     const docTitle = this.props.asset.name || t('Untitled');
     if (this.props.hookUid) {
       return (
-        <DocumentTitle title={`${docTitle} | Survea`}>
+        <DocumentTitle title={`Survea | ${docTitle}`}>
           <bem.FormView m={'form-settings'} className='rest-services'>
             <RESTServiceLogs assetUid={this.props.asset.uid} hookUid={this.props.hookUid} />
           </bem.FormView>
