@@ -105,19 +105,6 @@ export class ProjectDownloads extends React.Component {
 			
           });
         }
-		//TODO : remove this if and update template before commit
-		if (this.state.type.startsWith("antea_env_fiche_sol_xlsx")) {
-          // Only send extra parameters when necessary
-          Object.assign(postData, {
-            lang: '_default',
-            hierarchy_in_labels: false,
-            group_sep: '-',
-			header_lang : false,
-			fields_from_all_versions : 'false',
-			//hierarchy_in_labels :'true'
-			
-          });
-        }
         $.ajax({
           method: 'POST',
           url: url,
