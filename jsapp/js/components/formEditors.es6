@@ -95,16 +95,26 @@ export class ProjectDownloads extends React.Component {
           });
         }
 		if (this.state.type.startsWith("antea_")) {
-          // Only send extra parameters when necessary
+          //Default antea export parameters
           Object.assign(postData, {
             lang: '_default',
             group_sep: '-',
 			header_lang : false,
 			fields_from_all_versions : 'false',
 			hierarchy_in_labels : 'true'
-			
           });
         }
+		if (this.state.type.startsWith("antea_json")) {
+          //Override for antea_json
+          Object.assign(postData, {
+            lang: this.state.lang,
+            group_sep: this.state.groupSep,
+			header_lang : false,
+			fields_from_all_versions : this.state.fieldsFromAllVersions,
+			hierarchy_in_labels : this.state.hierInLabels
+          });
+        }
+		
         $.ajax({
           method: 'POST',
           url: url,
@@ -273,8 +283,8 @@ export class ProjectDownloads extends React.Component {
 						</optgroup>
                       </select>
                     </bem.FormModal__item>
-                  , (['xls', 'csv', 'spss_labels'].includes(this.state.type))  ? [
-                      ['xls', 'csv'].includes(this.state.type) ? [
+                  , (['xls', 'csv', 'spss_labels'].includes(this.state.type) || this.state.type.startsWith("antea_json"))  ? [
+                      (['xls', 'csv'].includes(this.state.type) || this.state.type.startsWith("antea_json")) ? [
                         <bem.FormModal__item key={'x'} m='export-format'>
                           <label htmlFor='lang'>{t('Value and header format')}</label>
                           <select name='lang' value={this.state.lang}
