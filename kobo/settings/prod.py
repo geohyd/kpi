@@ -9,7 +9,7 @@ from django_auth_ldap.config import LDAPSearch
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('PG_DB', 'kobo_db'),
+        'NAME': os.environ.get('PG_DB_KPI', 'kobo_db'),
         'USER': os.environ.get('PG_USER', 'kobo'),
         'PASSWORD': os.environ.get('PG_PASS', 'kobo'),
         'HOST': os.environ.get('PG_HOST', '127.0.0.1'),
@@ -17,7 +17,7 @@ DATABASES = {
     },
     'kobocat': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': os.environ.get('PG_DB', 'kobo_db'),
+        'NAME': os.environ.get('PG_DB_KOBO', 'kobo_db'),
         'USER': os.environ.get('PG_USER', 'kobo'),
         'PASSWORD': os.environ.get('PG_PASS', 'kobo'),
         'HOST': os.environ.get('PG_HOST', '127.0.0.1'),
