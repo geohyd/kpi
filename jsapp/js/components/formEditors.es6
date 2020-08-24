@@ -385,7 +385,7 @@ export class ProjectDownloads extends React.Component {
                         <bem.FormView__label m='action'>
                           {item.status == 'complete' &&
                             <a className='form-view__link form-view__link--export-download'
-                              href={item.result} data-tip={t('Download')}>
+                              href={item.result} data-tip={t('Download')} download>
                               <i className='k-icon-download' />
                             </a>
                           }
