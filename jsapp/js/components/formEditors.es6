@@ -8,7 +8,7 @@ import alertify from 'alertifyjs';
 import editableFormMixin from '../editorMixins/editableForm';
 import moment from 'moment';
 import Checkbox from './checkbox';
-import bem from '../bem';
+import {bem} from '../bem';
 import DocumentTitle from 'react-document-title';
 import {dataInterface} from '../dataInterface';
 import {
@@ -18,9 +18,10 @@ import {
   formatTime,
 } from '../utils';
 import {
+  ROOT_URL,
   update_states,
   ASSET_TYPES
-} from '../constants';
+} from 'js/constants';
 
 const newFormMixins = [
     Reflux.ListenerMixin,
@@ -76,11 +77,7 @@ export class ProjectDownloads extends React.Component {
     }.bind(this), 5000);
 
     if (this.state.type.indexOf('_legacy') < 0) {
-      let url = this.props.asset.deployment__data_download_links[
-        this.state.type
-      ];
       if (['xls', 'csv', 'spss_labels'].includes(this.state.type) || this.state.type.startsWith("antea_")) {
-        url = `${dataInterface.rootUrl}/exports/`; // TODO: have the backend pass the URL in the asset
         let postData = {
           source: this.props.asset.url,
           type: this.state.type,
@@ -94,33 +91,30 @@ export class ProjectDownloads extends React.Component {
             group_sep: this.state.groupSep
           });
         }
-		if (this.state.type.startsWith("antea_")) {
+        if (this.state.type.startsWith("antea_")) {
           //Default antea export parameters
           Object.assign(postData, {
             lang: '_default',
             group_sep: '-',
-			header_lang : false,
-			fields_from_all_versions : 'false',
-			hierarchy_in_labels : 'true'
+            header_lang : false,
+            fields_from_all_versions : 'false',
+            hierarchy_in_labels : 'true'
           });
         }
-		if (this.state.type.startsWith("antea_json")) {
+        if (this.state.type.startsWith("antea_json")) {
           //Override for antea_json
           Object.assign(postData, {
             lang: this.state.lang,
             group_sep: this.state.groupSep,
-			header_lang : false,
-			fields_from_all_versions : this.state.fieldsFromAllVersions,
-			hierarchy_in_labels : this.state.hierInLabels
+            header_lang : false,
+            fields_from_all_versions : this.state.fieldsFromAllVersions,
+            hierarchy_in_labels : this.state.hierInLabels
           });
         }
-		
-        $.ajax({
-          method: 'POST',
-          url: url,
-          data: postData
-        }).done((data) => {
-          $.ajax({url: data.url}).then((taskData) => {
+        dataInterface.createExport(postData).done((data) => {
+          // TODO: have the backend pass this URL in the asset, so there is no
+          // need to requestExports first
+          $.ajax({url: data.url}).then(() => {
             // this.checkForFastExport(data.url);
             this.getExports();
           }).fail((taskFail) => {
@@ -132,6 +126,7 @@ export class ProjectDownloads extends React.Component {
           log('export creation failed', failData);
         });
       } else {
+        const url = this.props.asset.deployment__data_download_links[this.state.type];
         redirectTo(url);
       }
     }
@@ -344,7 +339,7 @@ export class ProjectDownloads extends React.Component {
                     <bem.FormModal__item key={'s'} m='export-submit'>
                       <input type='submit'
                         value={t('Export')}
-                        className='mdl-button mdl-js-button mdl-button--raised mdl-button--colored'
+                        className='mdl-button mdl-button--raised mdl-button--colored'
                         disabled={this.state.formSubmitDisabled}/>
                     </bem.FormModal__item>
                   ]}
