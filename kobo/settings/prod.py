@@ -1,12 +1,29 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
+# coding: utf-8
 from .base import *
 import ldap
 from django_auth_ldap.config import LDAPSearch
 
 # Add specific VARIABLES for production environment here
 # So far, all values are declared in `base.py`
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': os.environ.get('PG_DB', 'kobo_db'),
+        'USER': os.environ.get('PG_USER', 'kobo'),
+        'PASSWORD': os.environ.get('PG_PASS', 'kobo'),
+        'HOST': os.environ.get('PG_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('PG_PORT', '5432'),
+    },
+    'kobocat': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': os.environ.get('PG_DB', 'kobo_db'),
+        'USER': os.environ.get('PG_USER', 'kobo'),
+        'PASSWORD': os.environ.get('PG_PASS', 'kobo'),
+        'HOST': os.environ.get('PG_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('PG_PORT', '5432'),
+    }
+}
 
 AUTH_LDAP_USER_ATTR_MAP = {
     "first_name": "givenName",
