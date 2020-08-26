@@ -15,21 +15,24 @@ class ExtraDetailRegistrationView(RegistrationView):
         Save all the fields not included in the standard `RegistrationForm`
         into the JSON `data` field of an `ExtraUserDetail` object
         """
+        # if REGISTRATION_DEFAULT_FROM_EMAIL email is set, send validation account mail to this email
+        import os
+        new_user_email = form.instance.email
+        if os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL'):
+            form.instance.user_email = new_user_email
+            form.instance.email = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
+            form.cleaned_data['email'] = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
+
         standard_fields = set(RegistrationForm().fields.keys())
         extra_fields = set(form.fields.keys()).difference(standard_fields)
         # Don't save the user unless we successfully store the extra data
         with transaction.atomic():
-            # Get user email in memory
-            new_user_email = request.POST.get('email')
-            # Change email temporary to send it to the webmaster
-            if os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL'):
-                form.instance.user_email = new_user_email
-                form.instance.email = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
             new_user = super().register(form)
             extra_data = {k: form.cleaned_data[k] for k in extra_fields}
             new_user.extra_details.data.update(extra_data)
             new_user.extra_details.save()
-            # Rewrite the right user email
-            new_user.email = new_user_email
-            new_user.save()
+
+        # and reset the email to the new user
+        new_user.email = new_user_email
+        new_user.save()
         return new_user
