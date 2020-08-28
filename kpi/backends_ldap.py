@@ -11,7 +11,7 @@ class LDAPKPIBackend(LDAPBackend):
             user.set_password(password)
             user.save()
         #let standard AUTHENTICATION_BACKENDS make the true authentification for binding KPI and KOBOCAT
-        return user
+        #return user
 
 class LDAPBackend1(LDAPKPIBackend):
     settings_prefix = "AUTH_LDAP_1_"
