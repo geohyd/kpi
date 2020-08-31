@@ -262,8 +262,12 @@ export class FormMap extends React.Component {
     } else if (this.props.asset.map_styles.querylimit) {
       queryLimit = this.props.asset.map_styles.querylimit;
     }
-
-    var fq = ['_id', '_geolocation'];
+	
+	// antea - Geo-hyd start
+    //var fq = ['_id', '_geolocation'];
+	var fq = [];
+	// antea - Geo-hyd end
+	
     if (selectedQuestion) fq.push(selectedQuestion);
     if (nextViewBy) fq.push(this.nameOfFieldInGroup(nextViewBy));
     const sort = [{id: '_id', desc: true}];
@@ -392,6 +396,50 @@ export class FormMap extends React.Component {
 
         prepPoints.push(L.marker(item._geolocation, markerProps));
       }
+	  // antea - Geo-hyd start
+	 
+	  Object.keys(item).forEach(function (e) {
+          if (typeof item[e] === 'string') {
+			  let x_string = item[e].split(';');
+			  if (x_string.length > 1) {
+				let points = [];
+				for (let point of x_string) {
+					let point_string = point.split(' ');
+					if (point_string.length > 1) {
+						let y_float = parseFloat(point_string[0]);
+						let x_float = parseFloat(point_string[1]);
+						if (Number.isNaN(x_float) || Number.isNaN(y_float)) {
+							// console.log('Malformed coordinates : ' + submission[e]);
+						  return;
+						}
+						points.push([y_float, x_float]);
+					}
+				}
+				if (points[0][0] === _.last(points)[0] && points[0][1] === _.last(points)[1]) {
+					// console.log('polygone', points);
+				  if (!(Object.keys(_this.state.layerpoints).includes(e))){
+					  _this.state.layerpoints[e] = L.featureGroup();
+					  _this.state.layerpoints[e].on('click', _this.launchSubmissionModal);
+				  }
+				  let polygon = L.polygon(points, {sId: item._id});
+				  _this.state.layerpoints[e].addLayer(polygon);
+				} else {
+					// console.log('ligne', points);
+				  if (!(Object.keys(_this.state.layerpoints).includes(e))){
+					_this.state.layerpoints[e] = L.featureGroup();
+					  _this.state.layerpoints[e].on('click', _this.launchSubmissionModal);
+				  }
+				  let polyline = L.polyline(points, {sId: item._id});
+				  // L.path.touchHelper(polyline, {sId: submission._id}).addTo(_this.state.layerpoints[e]);
+				  _this.state.layerpoints[e].addLayer(polyline);
+				}
+			  }
+		  }
+		 
+      });
+	  // antea - Geo-hyd end
+	  
+	  
     });
 
     if (prepPoints.length >= 0) {
