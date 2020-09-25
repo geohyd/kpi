@@ -101,6 +101,16 @@ export class ProjectDownloads extends React.Component {
             hierarchy_in_labels : 'true'
           });
         }
+		if (this.state.type.startsWith("antea_f2_")) {
+          //Default antea export parameters
+          Object.assign(postData, {
+            lang: '_default',
+            group_sep: '-',
+            header_lang : false,
+            fields_from_all_versions : 'false',
+            hierarchy_in_labels : 'false'
+          });
+        }
         if (this.state.type.startsWith("antea_json")) {
           //Override for antea_json
           Object.assign(postData, {
@@ -274,6 +284,7 @@ export class ProjectDownloads extends React.Component {
 						<optgroup label={t('Antea exports')}>
 							<option value='antea_env_fiche_sol_xlsx'>{t('Antea ENV Fiche SOL (XLSX)')}</option>
 							<option value='antea_eau_fiche_pr_xlsx'>{t('Antea EAU Fiche PR (XLSX)')}</option>
+							<option value='antea_f2_eau_fiche_regardassai_xlsx'>{t('Antea EAU Fiche Regard assainissement (XLSX)')}</option>
 							<option value='antea_json'>{t('JSON')}</option>
 						</optgroup>
                       </select>
