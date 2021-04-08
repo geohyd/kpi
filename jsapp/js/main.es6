@@ -19,11 +19,18 @@ var el = (function(){
   return $d.get(0);
 })();
 
-const csrftoken = $('meta[name=csrf-token]').attr('content');
+const cookies = new Cookies();
 
 function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+let csrfToken = '';
+try {
+  csrfToken = document.cookie.match(/csrftoken=(\w{64})/)[1];
+} catch (err) {
+  console.error('Cookie not matched');
 }
 
 $.ajaxSetup({
