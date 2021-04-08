@@ -11,10 +11,10 @@ import ui from '../ui';
 import classNames from 'classnames';
 import omnivore from '@mapbox/leaflet-omnivore';
 import JSZip from 'jszip';
-// antea - Geo-hyd start
+// ANTEA START
 import $ from 'jquery';
 import _ from 'lodash';
-// antea - Geo-hyd end
+// ANTEA END
 import L from 'leaflet/dist/leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat/dist/leaflet-heat';
@@ -81,10 +81,10 @@ export class FormMap extends React.Component {
       fields: [],
       hasGeoPoint: hasGeoPoint,
       submissions: [],
-      // antea - Geo-hyd start
+      // ANTEA START
       layerpoints: {},
       layersactive: false,
-      // antea - Geo-hyd end
+      // ANTEA END
       error: false,
       isFullscreen: false,
       showExpandedLegend: true,
@@ -121,14 +121,14 @@ export class FormMap extends React.Component {
       iconSize: [12, 12]
     });
 
-    // antea - Geo-hyd start
+    // ANTEA START
     var map = L.map('data-map', {
       maxZoom: 17,
       scrollWheelZoom: true,
       preferCanvas: true
     });
     this.state.map = map;
-    // antea - Geo-hyd start
+    // ANTEA END
 
     streets.addTo(map);
     controls.addTo(map);
@@ -406,7 +406,7 @@ export class FormMap extends React.Component {
 
         prepPoints.push(L.marker(item._geolocation, markerProps));
       }
-	  // antea - Geo-hyd start
+	  // ANTEA START
 	 
 	  Object.keys(item).forEach(function (e) {
           if (typeof item[e] === 'string') {
@@ -447,7 +447,7 @@ export class FormMap extends React.Component {
 		  }
 		 
       });
-	  // antea - Geo-hyd end
+	  // ANTEA END
 	  
 	  
     });
@@ -743,7 +743,7 @@ export class FormMap extends React.Component {
     if (this.state.isFullscreen) {
       formViewModifiers.push('fullscreen');
     }
-// antea - Geo-hyd start
+// ANTEA START
     let self = this;
 
     const layersstyle = {
@@ -774,7 +774,7 @@ export class FormMap extends React.Component {
             </label>
         </div>);
     });
-// antea - Geo-hyd end
+// ANTEA END
 
     return (
       <bem.FormView m={formViewModifiers} className='right-tooltip'>
@@ -801,7 +801,7 @@ export class FormMap extends React.Component {
           data-tip={t('Map display settings')}>
           <i className='k-icon-settings' />
         </bem.FormView__mapButton>
-        {/*antea - Geo-hyd start*/}
+        {/*ANTEA START*/}
         <bem.FormView__mapButton
           m={'display-all-geom'}
           style={buttonstyle}
@@ -823,7 +823,7 @@ export class FormMap extends React.Component {
               {items}
             </ui.PopoverMenu>
         </div>
-        {/*antea - Geo-hyd start*/}
+        {/*ANTEA END*/}
         {!viewby &&
           <bem.FormView__mapButton m={'heatmap'}
             onClick={this.showHeatmap}
