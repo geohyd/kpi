@@ -320,7 +320,9 @@ export default class AccountSettings extends React.Component {
               </bem.AccountSettings__item>
               <ApiTokenDisplay/>
 
-              {/*<bem.AccountSettings__item>
+              <ApiTokenDisplay/>
+
+              {/*ANTEA Comment <bem.AccountSettings__item>
                 <TextBox
                   label={t('Organization')}
                   errors={this.state.fieldsErrors.organization}

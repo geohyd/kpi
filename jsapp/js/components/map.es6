@@ -262,12 +262,8 @@ export class FormMap extends React.Component {
     } else if (this.props.asset.map_styles.querylimit) {
       queryLimit = this.props.asset.map_styles.querylimit;
     }
-	
-	// antea - Geo-hyd start
-    //var fq = ['_id', '_geolocation'];
-	var fq = [];
-	// antea - Geo-hyd end
-	
+
+    var fq = ['_id', '_geolocation'];
     if (selectedQuestion) fq.push(selectedQuestion);
     if (nextViewBy) fq.push(this.nameOfFieldInGroup(nextViewBy));
     const sort = [{id: '_id', desc: true}];
@@ -695,29 +691,6 @@ export class FormMap extends React.Component {
     const flatPaths = getSurveyFlatPaths(this.props.asset.content.survey);
     return flatPaths[fieldName];
   }
-
-  // antea - Geo-hyd start
-  toggleLayerList() {
-    this.setState({
-      layersactive: !this.state.layersactive
-    }, () => this.showSubmissions());
-  }
-  showSubmissions(){
-    let self = this;
-    if(self.state.layersactive){
-      Object.keys(self.state.layerpoints).forEach(function(e){
-        if($(document.getElementById(e)).prop('checked'))
-          self.state.map.addLayer(self.state.layerpoints[e]);
-      });
-      document.getElementsByClassName('divlayers')[0].style.display = '';
-    } else{
-		Object.keys(self.state.layerpoints).forEach(function(e){
-        self.state.map.removeLayer(self.state.layerpoints[e]);
-      });
-      document.getElementsByClassName('divlayers')[0].style.display = 'none';
-    }
-  }
-  // antea - Geo-hyd end
 
   render () {
     if (this.state.error) {

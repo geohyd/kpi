@@ -22,7 +22,6 @@ class ExtraDetailRegistrationView(RegistrationView):
             form.instance.user_email = new_user_email
             form.instance.email = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
             form.cleaned_data['email'] = os.environ.get('REGISTRATION_DEFAULT_FROM_EMAIL')
-
         standard_fields = set(RegistrationForm().fields.keys())
         extra_fields = set(form.fields.keys()).difference(standard_fields)
         # Don't save the user unless we successfully store the extra data

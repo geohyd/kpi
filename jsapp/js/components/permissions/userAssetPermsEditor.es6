@@ -273,9 +273,7 @@ class UserAssetPermsEditor extends React.Component {
   }
 
   notifyUnknownUser(username) {
-    if (navigator.onLine) {
-      notify(`${t('User not found:')} ${username}`, 'warning');
-    }
+    notify(`${t('User not found:')} ${username}`, 'warning');
   }
 
   /**
