@@ -241,7 +241,7 @@ export default class AccountSettings extends React.Component {
     };
 
     return (
-      <DocumentTitle title={`${accountName} | Survea`}>
+      <DocumentTitle title={`Survea - ${accountName}`}>
         <bem.AccountSettings>
           <bem.AccountSettings__actions>
             <bem.KoboButton
@@ -312,7 +312,6 @@ export default class AccountSettings extends React.Component {
                   {t('Modify Password')}
                 </a>
               </bem.AccountSettings__item>
-              <ApiTokenDisplay/>
 
               <ApiTokenDisplay/>
 

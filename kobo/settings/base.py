@@ -240,9 +240,9 @@ LANGUAGES = [
             'DJANGO_LANGUAGE_CODES', 'en').split(' ')
 ]
 
-LANGUAGE_CODE = 'fr-fr'
+LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Paris'
+TIME_ZONE = 'UTC'
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale'),)
 
@@ -466,14 +466,13 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 ''' Django Registration configuration '''
 # http://django-registration-redux.readthedocs.org/en/latest/quickstart.html#settings
-ACCOUNT_ACTIVATION_DAYS = 15
+ACCOUNT_ACTIVATION_DAYS = 3
 REGISTRATION_AUTO_LOGIN = True
 REGISTRATION_EMAIL_HTML = False  # Otherwise we have to write HTML templates
 
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'jsapp/compiled/',
-        'STATS_FILE': "/srv/kobo/kpi/webpack-stats.json",
         'POLL_INTERVAL': 0.5,
         'TIMEOUT': 5,
     }
