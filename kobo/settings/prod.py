@@ -94,3 +94,4 @@ CONSTANCE_CONFIG = {
                          'Number of times the system will retry '
                          'to send data to remote server before giving up')
 }
+ENV = 'prod'

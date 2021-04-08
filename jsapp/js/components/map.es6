@@ -21,7 +21,11 @@ import 'leaflet.heat/dist/leaflet-heat';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 
-import {MODAL_TYPES, QUESTION_TYPES} from '../constants';
+import {
+  MODAL_TYPES,
+  QUESTION_TYPES,
+  QUERY_LIMIT_DEFAULT,
+} from '../constants';
 
 import {
   notify,
@@ -63,7 +67,7 @@ export class FormMap extends React.Component {
     let survey = props.asset.content.survey;
     var hasGeoPoint = false;
     survey.forEach(function(s) {
-      if (s.type === QUESTION_TYPES.get('geopoint').id) {
+      if (s.type === QUESTION_TYPES.geopoint.id) {
         hasGeoPoint = true;
       }
     });
@@ -260,7 +264,7 @@ export class FormMap extends React.Component {
         typeof row.label !== 'undefined' &&
         row.label !== null &&
         selectedQuestion === row.label[0] &&
-        row.type !== QUESTION_TYPES.get('geopoint').id
+        row.type !== QUESTION_TYPES.geopoint.id
       ) {
         selectedQuestion = null; //Ignore if not a geopoint question type
       }
@@ -955,4 +959,3 @@ export class FormMap extends React.Component {
 reactMixin(FormMap.prototype, Reflux.ListenerMixin);
 
 export default FormMap;
-export const QUERY_LIMIT_DEFAULT = 5000;
