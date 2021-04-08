@@ -15,7 +15,6 @@ from django.db import models
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch
 from django.utils.translation import ugettext_lazy as _
-from jsonfield import JSONField
 from taggit.managers import TaggableManager, _TaggableManager
 from taggit.utils import require_instance_manager
 
@@ -40,9 +39,8 @@ from kpi.constants import (
     PERM_DELETE_ASSET,
     PERM_DELETE_SUBMISSIONS,
     PERM_FROM_KC_ONLY,
+    PERM_MANAGE_ASSET,
     PERM_PARTIAL_SUBMISSIONS,
-    PERM_SHARE_ASSET,
-    PERM_SHARE_SUBMISSIONS,
     PERM_VALIDATE_SUBMISSIONS,
     PERM_VIEW_ASSET,
     PERM_VIEW_COLLECTION,
@@ -476,8 +474,8 @@ class Asset(ObjectPermissionMixin,
     name = models.CharField(max_length=255, blank=True, default='')
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
-    content = JSONField(default=dict)
-    summary = JSONField(default=dict)
+    content = JSONBField(default=dict)
+    summary = JSONBField(default=dict)
     report_styles = JSONBField(default=dict)
     report_custom = JSONBField(default=dict)
     map_styles = LazyDefaultJSONBField(default=dict)
@@ -488,14 +486,13 @@ class Asset(ObjectPermissionMixin,
                                null=True, blank=True, on_delete=models.CASCADE)
     owner = models.ForeignKey('auth.User', related_name='assets', null=True,
                               on_delete=models.CASCADE)
-    editors_can_change_permissions = models.BooleanField(default=True)
     uid = KpiUidField(uid_prefix='a')
     tags = TaggableManager(manager=KpiTaggableManager)
     settings = JSONBField(default=dict)
 
     # _deployment_data should be accessed through the `deployment` property
     # provided by `DeployableMixin`
-    _deployment_data = JSONField(default=dict)
+    _deployment_data = JSONBField(default=dict)
 
     permissions = GenericRelation(ObjectPermission)
 
@@ -512,7 +509,7 @@ class Asset(ObjectPermissionMixin,
             # change_, add_, and delete_asset are provided automatically
             # by Django
             (PERM_VIEW_ASSET, _('Can view asset')),
-            (PERM_SHARE_ASSET, _("Can change asset's sharing settings")),
+            (PERM_MANAGE_ASSET, _('Can manage all aspects of asset')),
             # Permissions for collected data, i.e. submissions
             (PERM_ADD_SUBMISSIONS, _('Can submit data to asset')),
             (PERM_VIEW_SUBMISSIONS, _('Can view submitted data for asset')),
@@ -521,8 +518,6 @@ class Asset(ObjectPermissionMixin,
                                          'for specific users')),
             (PERM_CHANGE_SUBMISSIONS, _('Can modify submitted data for asset')),
             (PERM_DELETE_SUBMISSIONS, _('Can delete submitted data for asset')),
-            (PERM_SHARE_SUBMISSIONS, _("Can change sharing settings for "
-                                       "asset's submitted data")),
             (PERM_VALIDATE_SUBMISSIONS, _("Can validate submitted data asset")),
             # TEMPORARY Issue #1161: A flag to indicate that permissions came
             # solely from `sync_kobocat_xforms` and not from any user
@@ -541,15 +536,19 @@ class Asset(ObjectPermissionMixin,
         # The simplest way to fix this is to keep old behaviour
         default_permissions = ('add', 'change', 'delete')
 
-    # Labels for each `asset_type` as they should be presented to users
-    ASSET_TYPE_LABELS = {
-        ASSET_TYPE_SURVEY: _('form'),
+    # Labels for each `asset_type` as they should be presented to users. Can be
+    # strings or callables if special logic is needed. Callables receive the
+    # codename of the permission for which a label is being created
+    ASSET_TYPE_LABELS_FOR_PERMISSIONS = {
+        ASSET_TYPE_SURVEY: (
+            lambda p: _('project') if p == PERM_MANAGE_ASSET else _('form')
+        ),
         ASSET_TYPE_TEMPLATE: _('template'),
         ASSET_TYPE_BLOCK: _('block'),
         ASSET_TYPE_QUESTION: _('question'),
         ASSET_TYPE_TEXT: _('text'),  # unused?
         ASSET_TYPE_EMPTY: _('empty'),  # unused?
-        #ASSET_TYPE_COLLECTION: _('collection'),
+        # ASSET_TYPE_COLLECTION: _('collection'),
     }
 
     # Assignable permissions that are stored in the database.
@@ -558,31 +557,42 @@ class Asset(ObjectPermissionMixin,
     ASSIGNABLE_PERMISSIONS_WITH_LABELS = {
         PERM_VIEW_ASSET: _('View ##asset_type_label##'),
         PERM_CHANGE_ASSET: _('Edit ##asset_type_label##'),
+        PERM_MANAGE_ASSET: _('Manage ##asset_type_label##'),
         PERM_ADD_SUBMISSIONS: _('Add submissions'),
         PERM_VIEW_SUBMISSIONS: _('View submissions'),
         PERM_PARTIAL_SUBMISSIONS: _('View submissions only from specific users'),
-        PERM_CHANGE_SUBMISSIONS: _('Edit and delete submissions'),
+        PERM_CHANGE_SUBMISSIONS: _('Edit submissions'),
+        PERM_DELETE_SUBMISSIONS: _('Delete submissions'),
         PERM_VALIDATE_SUBMISSIONS: _('Validate submissions'),
     }
     ASSIGNABLE_PERMISSIONS = tuple(ASSIGNABLE_PERMISSIONS_WITH_LABELS.keys())
     # Depending on our `asset_type`, only some permissions might be applicable
     ASSIGNABLE_PERMISSIONS_BY_TYPE = {
-        ASSET_TYPE_SURVEY: ASSIGNABLE_PERMISSIONS, # all of them
-        ASSET_TYPE_TEMPLATE: (PERM_VIEW_ASSET, PERM_CHANGE_ASSET),
-        ASSET_TYPE_BLOCK: (PERM_VIEW_ASSET, PERM_CHANGE_ASSET),
-        ASSET_TYPE_QUESTION: (PERM_VIEW_ASSET, PERM_CHANGE_ASSET),
+        ASSET_TYPE_SURVEY: ASSIGNABLE_PERMISSIONS,  # all of them
+        ASSET_TYPE_TEMPLATE: (
+            PERM_VIEW_ASSET,
+            PERM_CHANGE_ASSET,
+            PERM_MANAGE_ASSET,
+        ),
+        ASSET_TYPE_BLOCK: (
+            PERM_VIEW_ASSET,
+            PERM_CHANGE_ASSET,
+            PERM_MANAGE_ASSET,
+        ),
+        ASSET_TYPE_QUESTION: (
+            PERM_VIEW_ASSET,
+            PERM_CHANGE_ASSET,
+            PERM_MANAGE_ASSET,
+        ),
         ASSET_TYPE_TEXT: (),  # unused?
         ASSET_TYPE_EMPTY: (),  # unused?
-        #ASSET_TYPE_COLLECTION: # tbd
+        # ASSET_TYPE_COLLECTION: # tbd
     }
 
     # Calculated permissions that are neither directly assignable nor stored
     # in the database, but instead implied by assignable permissions
     CALCULATED_PERMISSIONS = (
-        PERM_SHARE_ASSET,
         PERM_DELETE_ASSET,
-        PERM_SHARE_SUBMISSIONS,
-        PERM_DELETE_SUBMISSIONS
     )
     # Certain Collection permissions carry over to Asset
     MAPPED_PARENT_PERMISSIONS = {
@@ -593,26 +603,41 @@ class Asset(ObjectPermissionMixin,
     IMPLIED_PERMISSIONS = {
         # Format: explicit: (implied, implied, ...)
         PERM_CHANGE_ASSET: (PERM_VIEW_ASSET,),
+        PERM_MANAGE_ASSET: tuple(
+            (
+                p
+                for p in ASSIGNABLE_PERMISSIONS
+                if p not in (PERM_MANAGE_ASSET, PERM_PARTIAL_SUBMISSIONS)
+            )
+        ),
         PERM_ADD_SUBMISSIONS: (PERM_VIEW_ASSET,),
         PERM_VIEW_SUBMISSIONS: (PERM_VIEW_ASSET,),
         PERM_PARTIAL_SUBMISSIONS: (PERM_VIEW_ASSET,),
         PERM_CHANGE_SUBMISSIONS: (PERM_VIEW_SUBMISSIONS,),
-        PERM_VALIDATE_SUBMISSIONS: (PERM_VIEW_SUBMISSIONS,)
+        PERM_DELETE_SUBMISSIONS: (PERM_VIEW_SUBMISSIONS,),
+        PERM_VALIDATE_SUBMISSIONS: (PERM_VIEW_SUBMISSIONS,),
     }
 
     CONTRADICTORY_PERMISSIONS = {
-        PERM_PARTIAL_SUBMISSIONS: (PERM_VIEW_SUBMISSIONS, PERM_CHANGE_SUBMISSIONS,
-                                      PERM_VALIDATE_SUBMISSIONS),
+        PERM_PARTIAL_SUBMISSIONS: (
+            PERM_VIEW_SUBMISSIONS,
+            PERM_CHANGE_SUBMISSIONS,
+            PERM_DELETE_SUBMISSIONS,
+            PERM_VALIDATE_SUBMISSIONS,
+            PERM_MANAGE_ASSET,
+        ),
         PERM_VIEW_SUBMISSIONS: (PERM_PARTIAL_SUBMISSIONS,),
         PERM_CHANGE_SUBMISSIONS: (PERM_PARTIAL_SUBMISSIONS,),
-        PERM_VALIDATE_SUBMISSIONS: (PERM_PARTIAL_SUBMISSIONS,)
+        PERM_DELETE_SUBMISSIONS: (PERM_PARTIAL_SUBMISSIONS,),
+        PERM_VALIDATE_SUBMISSIONS: (PERM_PARTIAL_SUBMISSIONS,),
     }
 
     # Some permissions must be copied to KC
-    KC_PERMISSIONS_MAP = {  # keys are KC's codenames, values are KPI's
+    KC_PERMISSIONS_MAP = {  # keys are KPI's codenames, values are KC's
         PERM_CHANGE_SUBMISSIONS: 'change_xform',  # "Can Edit" in KC UI
         PERM_VIEW_SUBMISSIONS: 'view_xform',  # "Can View" in KC UI
         PERM_ADD_SUBMISSIONS: 'report_xform',  # "Can submit to" in KC UI
+        PERM_DELETE_SUBMISSIONS: 'delete_data_xform',  # "Can Delete Data" in KC UI
         PERM_VALIDATE_SUBMISSIONS: 'validate_xform',  # "Can Validate" in KC UI
     }
     KC_CONTENT_TYPE_KWARGS = {'app_label': 'logger', 'model': 'xform'}
@@ -703,15 +728,26 @@ class Asset(ObjectPermissionMixin,
         except KeyError:
             if not permission:
                 # Seems expensive. Cache it?
-                permission = Permission.objects.filter(
+                permission = Permission.objects.get(
+                    # `content_type` and `codename` are `unique_together`
+                    # https://github.com/django/django/blob/e893c0ad8b0b5b0a1e5be3345c287044868effc4/django/contrib/auth/models.py#L69
                     content_type=ContentType.objects.get_for_model(self),
                     codename=codename
                 )
             label = permission.name
+        asset_type_label = self.ASSET_TYPE_LABELS_FOR_PERMISSIONS[
+            self.asset_type
+        ]
+        try:
+            # Some labels may be callables
+            asset_type_label = asset_type_label(codename)
+        except TypeError:
+            # Others are just strings
+            pass
         label = label.replace(
             '##asset_type_label##',
             # Raises TypeError if not coerced explicitly
-            str(self.ASSET_TYPE_LABELS[self.asset_type])
+            str(asset_type_label)
         )
         return label
 
@@ -786,11 +822,8 @@ class Asset(ObjectPermissionMixin,
     def optimize_queryset_for_list(queryset):
         """ Used by serializers to improve performance when listing assets """
         queryset = queryset.defer(
-            # Avoid pulling these `JSONField`s from the database because:
-            #   * they are stored as plain text, and just deserializing them
-            #     to Python objects is CPU-intensive;
-            #   * they are often huge;
-            #   * we don't need them for list views.
+            # Avoid pulling these from the database because they are often huge
+            # and we don't need them for list views.
             'content', 'report_styles'
         ).select_related(
             # We only need `username`, but `select_related('owner__username')`
@@ -1089,8 +1122,8 @@ class AssetSnapshot(models.Model, XlsExportable, FormpackXLSFormUtils):
     Remove above lines when PR is merged
     """
     xml = models.TextField()
-    source = JSONField(default=dict)
-    details = JSONField(default=dict)
+    source = JSONBField(null=True)
+    details = JSONBField(default=dict)
     owner = models.ForeignKey('auth.User', related_name='asset_snapshots',
                               null=True, on_delete=models.CASCADE)
     asset = models.ForeignKey(Asset, null=True, on_delete=models.CASCADE)

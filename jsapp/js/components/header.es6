@@ -9,14 +9,14 @@ import {stores} from '../stores';
 import Reflux from 'reflux';
 import {bem} from '../bem';
 import {actions} from '../actions';
+import {removeInvalidChars} from '../assetUtils';
 import mixins from '../mixins';
 import {dataInterface} from '../dataInterface';
 import {
-  t,
   assign,
   currentLang,
   stringToColor,
-} from '../utils';
+} from 'utils';
 import {searches} from '../searches';
 import {ListSearch} from '../components/list';
 import {NAME_MAX_LENGTH} from 'js/constants';
@@ -50,7 +50,6 @@ class MainHeader extends Reflux.Component {
     autoBind(this);
   }
   componentDidMount() {
-    document.body.classList.add('hide-edge');
     this.listenTo(stores.asset, this.assetLoad);
   }
   componentWillUpdate(newProps) {
@@ -98,6 +97,24 @@ class MainHeader extends Reflux.Component {
     );
   }
   renderAccountNavMenu () {
+    let shouldDisplayUrls = false;
+    if (
+      stores.session &&
+      stores.session.environment &&
+      typeof stores.session.environment.terms_of_service_url === 'string' &&
+      typeof stores.session.environment.terms_of_service_url.length >= 1
+    ) {
+      shouldDisplayUrls = true;
+    }
+    if (
+      stores.session &&
+      stores.session.environment &&
+      typeof stores.session.environment.privacy_policy_url === 'string' &&
+      typeof stores.session.environment.privacy_policy_url.length >= 1
+    ) {
+      shouldDisplayUrls = true;
+    }
+
     let langs = [];
     if (stores.session.environment) {
       langs = stores.session.environment.interface_languages;
@@ -111,10 +128,6 @@ class MainHeader extends Reflux.Component {
 
       return (
         <bem.AccountBox>
-          {/*<bem.AccountBox__notifications className="is-edge">
-            <i className="fa fa-bell"></i>
-            <bem.AccountBox__notifications__count> 2 </bem.AccountBox__notifications__count>
-          </bem.AccountBox__notifications>*/}
           <ui.PopoverMenu type='account-menu'
                           triggerLabel={accountMenuLabel}
                           buttonType='text'>
@@ -128,12 +141,25 @@ class MainHeader extends Reflux.Component {
                     <span className='account-email'>{accountEmail}</span>
                   </bem.AccountBox__menuItem>
                   <bem.AccountBox__menuItem m={'settings'}>
-                    <button onClick={this.accountSettings} className='mdl-button mdl-button--raised mdl-button--colored'>
+                    <bem.KoboButton onClick={this.accountSettings} m={['blue', 'fullwidth']}>
                       {t('Account Settings')}
-                    </button>
+                    </bem.KoboButton>
                   </bem.AccountBox__menuItem>
                 </bem.AccountBox__menuLI>
-                
+                {shouldDisplayUrls &&
+                  <bem.AccountBox__menuLI key='2' className='environment-links'>
+                    {stores.session.environment.terms_of_service_url &&
+                      <a href={stores.session.environment.terms_of_service_url} target='_blank'>
+                        {t('Terms of Service')}
+                      </a>
+                    }
+                    {stores.session.environment.privacy_policy_url &&
+                      <a href={stores.session.environment.privacy_policy_url} target='_blank'>
+                        {t('Privacy Policy')}
+                      </a>
+                    }
+                  </bem.AccountBox__menuLI>
+                }
                 <bem.AccountBox__menuLI m={'lang'} key='3'>
                   <bem.AccountBox__menuLink onClick={this.toggleLanguageSelector} data-popover-menu-stop-blur tabIndex='0'>
                     <i className='k-icon-language' />
@@ -202,9 +228,9 @@ class MainHeader extends Reflux.Component {
   assetTitleChange (e) {
     var asset = this.state.asset;
     if (e.target.name == 'title')
-      asset.name = e.target.value;
+      asset.name = removeInvalidChars(e.target.value);
     else
-      asset.settings.description = e.target.value;
+      asset.settings.description = removeInvalidChars(e.target.value);
 
     this.setState({
       asset: asset
@@ -238,9 +264,9 @@ class MainHeader extends Reflux.Component {
     return (
         <header className='mdl-layout__header'>
           <div className='mdl-layout__header-row'>
-            <button className='mdl-button mdl-button--icon' onClick={this.toggleFixedDrawer}>
+            <bem.Button m='icon' onClick={this.toggleFixedDrawer}>
               <i className='fa fa-bars' />
-            </button>
+            </bem.Button>
             <span className='mdl-layout-title'>
               <a href='/'>
                 <bem.Header__logo />

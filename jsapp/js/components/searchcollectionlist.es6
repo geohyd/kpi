@@ -10,10 +10,12 @@ import {dataInterface} from '../dataInterface';
 import {bem} from '../bem';
 import AssetRow from './assetrow';
 import DocumentTitle from 'react-document-title';
-import $ from 'jquery';
 import Dropzone from 'react-dropzone';
-import {t, validFileTypes} from '../utils';
-import {ASSET_TYPES} from '../constants';
+import {validFileTypes} from 'utils';
+import {
+  ASSET_TYPES,
+  CATEGORY_LABELS
+} from '../constants';
 
 class SearchCollectionList extends Reflux.Component {
   constructor(props) {
@@ -68,8 +70,8 @@ class SearchCollectionList extends Reflux.Component {
     if (this.props.searchContext.store.filterTags == 'asset_type:survey') {
       let offset = $(event.target).children('.asset-list').offset().top;
       this.setState({
-        fixedHeadings: offset < -105 ? 'fixed-headings' : '',
-        fixedHeadingsWidth: offset < -105 ? $(event.target).children('.asset-list').width() + 'px' : 'auto',
+        fixedHeadings: offset < 30 ? 'fixed-headings' : '',
+        fixedHeadingsWidth: offset < 30 ? $(event.target).children('.asset-list').width() + 'px' : 'auto',
       });
     }
   }
@@ -169,7 +171,7 @@ class SearchCollectionList extends Reflux.Component {
         }
         return [
           <bem.List__subheading key={i}>
-            {t(category)}
+            {CATEGORY_LABELS[category]}
           </bem.List__subheading>,
           <bem.AssetItems m={i+1} key={i+2}>
             {this.renderGroupedHeadings()}
@@ -184,11 +186,7 @@ class SearchCollectionList extends Reflux.Component {
       }
     );
 
-    return [
-      <bem.List__heading key='h1' className='is-edge'>
-        {t('Active Projects')}
-      </bem.List__heading>,
-      results];
+    return results;
   }
 
   render () {

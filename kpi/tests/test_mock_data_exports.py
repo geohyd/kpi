@@ -12,11 +12,23 @@ from django.urls import reverse
 from django.test import TestCase
 
 from kobo.apps.reports import report_data
-from kpi.constants import PERM_PARTIAL_SUBMISSIONS, PERM_VIEW_SUBMISSIONS
+from kpi.constants import (
+    PERM_CHANGE_ASSET,
+    PERM_CHANGE_SUBMISSIONS,
+    PERM_PARTIAL_SUBMISSIONS,
+    PERM_VIEW_ASSET,
+    PERM_VIEW_SUBMISSIONS,
+)
 from kpi.models import Asset, ExportTask
+from kpi.models.object_permission import get_anonymous_user
 
 
-class MockDataExports(TestCase):
+class MockDataExportsBase(TestCase):
+    """
+    Creates self.asset, deploys it using the mock backend, and makes some
+    submissions to it
+    """
+
     fixtures = ['test_data']
 
     form_content = {
@@ -178,7 +190,6 @@ class MockDataExports(TestCase):
 
     def setUp(self):
         self.user = User.objects.get(username='someuser')
-        self.anotheruser = User.objects.get(username='anotheruser')
         self.asset = Asset.objects.create(
             name='Identificación de animales',
             content=self.form_content,
@@ -186,11 +197,6 @@ class MockDataExports(TestCase):
         )
         self.asset.deploy(backend='mock', active=True)
         self.asset.save()
-        partial_perms = {
-            PERM_VIEW_SUBMISSIONS: [{'_submitted_by': self.anotheruser.username}]
-        }
-        self.asset.assign_perm(self.anotheruser, PERM_PARTIAL_SUBMISSIONS,
-                               partial_perms=partial_perms)
 
         v_uid = self.asset.latest_deployed_version.uid
         for submission in self.submissions:
@@ -198,14 +204,33 @@ class MockDataExports(TestCase):
                 '__version__': v_uid
             })
         self.asset.deployment.mock_submissions(self.submissions)
+
+
+class MockDataExports(MockDataExportsBase):
+    def setUp(self):
+        super().setUp()
+
+        self.anotheruser = User.objects.get(username='anotheruser')
+        partial_perms = {
+            PERM_VIEW_SUBMISSIONS: [
+                {'_submitted_by': self.anotheruser.username}
+            ]
+        }
+        self.asset.assign_perm(
+            self.anotheruser,
+            PERM_PARTIAL_SUBMISSIONS,
+            partial_perms=partial_perms,
+        )
+
         self.formpack, self.submission_stream = report_data.build_formpack(
             self.asset,
             submission_stream=self.asset.deployment.get_submissions(
-                self.asset.owner.id)
+                self.asset.owner.id
+            ),
         )
 
     def run_csv_export_test(
-        self, expected_lines, export_options=None, asset=None, user=None
+        self, expected_lines=None, export_options=None, asset=None, user=None
     ):
         """
         Repeat yourself less while writing CSV export tests.
@@ -229,12 +254,15 @@ class MockDataExports(TestCase):
             export_task.data.update(export_options)
         messages = defaultdict(list)
         export_task._run_task(messages)
-        expected_lines = [
-            (line + '\r\n').encode('utf-8') for line in expected_lines
-        ]
-        result_lines = list(export_task.result)
 
-        self.assertEqual(result_lines, expected_lines)
+        if expected_lines is not None:
+            expected_lines = [
+                (line + '\r\n').encode('utf-8') for line in expected_lines
+            ]
+            result_lines = list(export_task.result)
+
+            self.assertEqual(result_lines, expected_lines)
+
         self.assertFalse(messages)
 
     def run_xls_export_test(self, expected_rows, export_options=None, user=None):
@@ -477,9 +505,8 @@ class MockDataExports(TestCase):
             export_task.user = self.user
             export_task.data = task_data
             export_task.save()
-        created_export_tasks = ExportTask._filter_by_source_kludge(
-            ExportTask.objects.filter(user=self.user),
-            task_data['source']
+        created_export_tasks = ExportTask.objects.filter(
+            user=self.user, data__source=task_data['source']
         )
         self.assertEqual(excess_count + 1, created_export_tasks.count())
         # Identify which exports should be kept
@@ -490,13 +517,13 @@ class MockDataExports(TestCase):
         self.assertEqual(export_task.status, ExportTask.COMPLETE)
         # Verify the cleanup
         self.assertFalse(result.storage.exists(result.name))
-        self.assertListEqual( # assertSequenceEqual isn't working...
+        self.assertListEqual(  # assertSequenceEqual isn't working...
             list(export_tasks_to_keep.values_list('pk', flat=True)),
-            list(ExportTask._filter_by_source_kludge(
+            list(
                 ExportTask.objects.filter(
-                    user=self.user),
-                task_data['source']
-            ).order_by('-date_created').values_list('pk', flat=True))
+                    user=self.user, data__source=task_data['source']
+                ).order_by('-date_created').values_list('pk', flat=True)
+            ),
         )
 
     def test_log_and_mark_stuck_exports_as_errored(self):
@@ -506,11 +533,9 @@ class MockDataExports(TestCase):
         }
         self.assertEqual(
             0,
-            ExportTask._filter_by_source_kludge(
-                ExportTask.objects.filter(
-                    user=self.user),
-                task_data['source']
-            ).count()
+            ExportTask.objects.filter(
+                user=self.user, data__source=task_data['source']
+            ).count(),
         )
         # Simulate a few stuck exports
         for status in (ExportTask.CREATED, ExportTask.PROCESSING):
@@ -523,11 +548,9 @@ class MockDataExports(TestCase):
             export_task.save()
         self.assertSequenceEqual(
             [ExportTask.CREATED, ExportTask.PROCESSING],
-            ExportTask._filter_by_source_kludge(
-                ExportTask.objects.filter(
-                    user=self.user),
-                task_data['source']
-            ).order_by('pk').values_list('status', flat=True)
+            ExportTask.objects.filter(
+                user=self.user, data__source=task_data['source']
+            ).order_by('pk').values_list('status', flat=True),
         )
         # Run another export, which invokes the cleanup logic
         export_task = ExportTask()
@@ -538,11 +561,9 @@ class MockDataExports(TestCase):
         # Verify that the stuck exports have been marked
         self.assertSequenceEqual(
             [ExportTask.ERROR, ExportTask.ERROR, ExportTask.COMPLETE],
-            ExportTask._filter_by_source_kludge(
-                ExportTask.objects.filter(
-                    user=self.user),
-                task_data['source']
-            ).order_by('pk').values_list('status', flat=True)
+            ExportTask.objects.filter(
+                user=self.user, data__source=task_data['source']
+            ).order_by('pk').values_list('status', flat=True),
         )
 
     def test_export_long_form_title(self):
@@ -644,3 +665,61 @@ class MockDataExports(TestCase):
         # fails with `KeyError` prior to fix for kobotoolbox/formpack#219
         self.run_csv_export_test(expected_lines, asset=asset)
 
+    def test_anotheruser_can_export_when_submissions_publicly_shared(self):
+        """
+        Running through behaviour described in issue kpi/#2870 where an asset
+        that has been publicly shared and then explicity shared with a user, the
+        user has lower permissions than an anonymous user and is therefore
+        unable to export submission data.
+        """
+        # resetting permissions of `anotheruser` to have no permissions
+        self.asset.remove_perm(self.anotheruser, PERM_PARTIAL_SUBMISSIONS)
+        self.asset.remove_perm(self.anotheruser, PERM_VIEW_ASSET)
+
+        anonymous_user = get_anonymous_user()
+
+        assert self.asset.has_perm(self.anotheruser, PERM_VIEW_ASSET) == False
+        assert PERM_VIEW_ASSET not in self.asset.get_perms(self.anotheruser)
+        assert self.asset.has_perm(self.anotheruser, PERM_CHANGE_ASSET) == False
+        assert PERM_CHANGE_ASSET not in self.asset.get_perms(self.anotheruser)
+
+        # required to export
+        self.asset.assign_perm(self.anotheruser, PERM_CHANGE_ASSET)
+
+        assert self.asset.has_perm(self.anotheruser, PERM_VIEW_ASSET) == True
+        assert PERM_VIEW_ASSET in self.asset.get_perms(self.anotheruser)
+        assert self.asset.has_perm(self.anotheruser, PERM_CHANGE_ASSET) == True
+        assert PERM_CHANGE_ASSET in self.asset.get_perms(self.anotheruser)
+
+        assert (
+            self.asset.has_perm(self.anotheruser, PERM_VIEW_SUBMISSIONS)
+            == False
+        )
+        assert PERM_VIEW_SUBMISSIONS not in self.asset.get_perms(
+            self.anotheruser
+        )
+
+        self.asset.assign_perm(anonymous_user, PERM_VIEW_SUBMISSIONS)
+
+        assert (
+            self.asset.has_perm(self.anotheruser, PERM_VIEW_SUBMISSIONS) == True
+        )
+        assert PERM_VIEW_SUBMISSIONS in self.asset.get_perms(self.anotheruser)
+
+        # testing anotheruser can export data
+        self.run_csv_export_test(user=self.anotheruser)
+
+        # resetting permissions of asset
+        partial_perms = {
+            PERM_VIEW_SUBMISSIONS: [
+                {'_submitted_by': self.anotheruser.username}
+            ]
+        }
+        self.asset.assign_perm(
+            self.anotheruser,
+            PERM_PARTIAL_SUBMISSIONS,
+            partial_perms=partial_perms,
+        )
+        self.asset.remove_perm(self.anotheruser, PERM_CHANGE_ASSET)
+        self.asset.remove_perm(anonymous_user, PERM_VIEW_ASSET)
+        self.asset.remove_perm(anonymous_user, PERM_VIEW_SUBMISSIONS)
