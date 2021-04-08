@@ -19,7 +19,7 @@ var el = (function(){
   return $d.get(0);
 })();
 
-const cookies = new Cookies();
+const csrftoken = $('meta[name=csrf-token]').attr('content');
 
 function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection

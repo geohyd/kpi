@@ -51,6 +51,7 @@ class ExportTaskViewSet(NoUpdateModelViewSet):
             raise exceptions.NotAuthenticated()
 
         # Read valid options from POST data
+        # ANTEA add param 'header_lang'
         valid_options = (
             'type',
             'source',
