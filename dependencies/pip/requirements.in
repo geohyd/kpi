@@ -1,7 +1,7 @@
 # File for use with `pip-compile`; see https://github.com/nvie/pip-tools
 # https://github.com/bndr/pipreqs is a handy utility, too.
 
-# formpack
+# formpack ANTEA
 -e git+https://github.com/geohyd/formpack.git#egg=formpack
 
 # More up-to-date version of django-digest than PyPI seems to have.
@@ -85,6 +85,6 @@ XlsxWriter
 pyopenssl
 ndg-httpsclient
 pyasn1
-# For Ldap
+# For Ldap ANTEA
 django-auth-ldap==1.3.0
 python-ldap==3.2.0

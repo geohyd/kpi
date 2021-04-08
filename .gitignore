@@ -25,7 +25,3 @@ celerybeat-schedule
 deployments.json
 .DS_Store
 jsapp/fonts
-media
-package-lock.json
-uwsgi.log
-locale

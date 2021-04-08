@@ -6,6 +6,21 @@ from django_auth_ldap.config import LDAPSearch
 # Add specific VARIABLES for production environment here
 # So far, all values are declared in `base.py`
 
+# add 'STATS_FILE': "/srv/kobo/kpi/webpack-stats.json",
+# vraiment nécessaire ?
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'jsapp/compiled/',
+        'STATS_FILE': "/srv/kobo/kpi/webpack-stats.json",
+        'POLL_INTERVAL': 0.5,
+        'TIMEOUT': 5,
+    }
+}
+
+LANGUAGE_CODE = 'fr-fr'
+
+TIME_ZONE = 'Europe/Paris'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',

@@ -419,7 +419,6 @@ class ExportTask(ImportExportTask):
     last_submission_time = models.DateTimeField(null=True)
     result = PrivateFileField(upload_to=export_upload_to, max_length=380)
 
-
     COPY_FIELDS = (
         '_id',
         '_uuid',
@@ -475,6 +474,8 @@ class ExportTask(ImportExportTask):
             extension = 'xlsx'
         elif export_type == 'spss_labels':
             extension = 'zip'
+        # ANTEA export type
+        # TODO : Can be (export_type.split("_")[-1]).lower() ?
         elif "antea" in export_type:
             if "xlsx" in export_type:
                 extension = 'xlsx'
@@ -529,18 +530,21 @@ class ExportTask(ImportExportTask):
         group_sep = self.data.get('group_sep', '/')
         multiple_select = self.data.get('multiple_select', 'both')
         translations = pack.available_translations
-
         lang = self.data.get('lang', None) or next(iter(translations), None)
+        # ANTEA HEADER_LANG PARAM
         header_lang = self.data.get('header_lang', lang)
         fields = self.data.get('fields', [])
         try:
             # If applicable, substitute the constants that formpack expects for
             # friendlier language strings used by the API
             lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang]
+            # ANTEA HEADER_LANG PARAM
             header_lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[header_lang]
         except KeyError:
             pass
         tag_cols_for_header = self.data.get('tag_cols_for_header', ['hxl'])
+
+        # ANTEA add geader_lang param at the end
         return {
             'versions': pack.versions.keys(),
             'group_sep': group_sep,
@@ -607,6 +611,7 @@ class ExportTask(ImportExportTask):
 
         export_type = self.data.get('type', '').lower()
         if export_type not in ('xls', 'csv', 'geojson', 'spss_labels'):
+            # ANTEA check if antea export
             if 'antea_' not in export_type:
                 raise NotImplementedError(
                     'only `xls`, `csv`, `geojson`, and `spss_labels` '
@@ -671,6 +676,7 @@ class ExportTask(ImportExportTask):
                     output_file.write(xlsx_output_file.read())
             elif export_type == 'spss_labels':
                 export.to_spss_labels(output_file)
+            # ANTEA check if antea export
             elif "antea" in export_type:
                 from rest_framework.authtoken.models import Token
                 token = Token.objects.get(user=self.user)

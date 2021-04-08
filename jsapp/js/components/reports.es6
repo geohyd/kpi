@@ -1097,6 +1097,7 @@ class Reports extends React.Component {
         </bem.Loading>
       );
     }
+    
     const formViewModifiers = [];
     if (this.state.isFullscreen) {
       formViewModifiers.push('fullscreen');

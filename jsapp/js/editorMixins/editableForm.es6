@@ -817,7 +817,7 @@ export default assign({
     );
 
     return (
-      <DocumentTitle title={`${docTitle} | Survea`}>
+      <DocumentTitle title={`Survea - ${docTitle}`}>
         <ui.Panel m={['transparent', 'fixed']}>
           {this.renderAside()}
 

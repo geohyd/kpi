@@ -340,7 +340,7 @@ class FormSummary extends React.Component {
     }
 
     return (
-      <DocumentTitle title={`Survea | ${docTitle}`}>
+      <DocumentTitle title={`Survea - ${docTitle}`}>
         <bem.FormView m='summary'>
           <bem.FormView__column m='left'>
             {(this.state.settings && (this.state.settings.country || this.state.settings.sector || this.state.settings.description)) &&
