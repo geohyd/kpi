@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import React from 'react';
 import PropTypes from 'prop-types';
 import reactMixin from 'react-mixin';
@@ -12,11 +11,10 @@ import {bem} from '../bem';
 import DocumentTitle from 'react-document-title';
 import {dataInterface} from '../dataInterface';
 import {
-  t,
   log,
   redirectTo,
   formatTime,
-} from '../utils';
+} from 'utils';
 import {
   ROOT_URL,
   update_states,
@@ -352,7 +350,7 @@ export class ProjectDownloads extends React.Component {
                     <bem.FormModal__item key={'s'} m='export-submit'>
                       <input type='submit'
                         value={t('Export')}
-                        className='mdl-button mdl-button--raised mdl-button--colored'
+                        className='kobo-button kobo-button--blue'
                         disabled={this.state.formSubmitDisabled}/>
                     </bem.FormModal__item>
                   ]}

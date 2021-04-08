@@ -1,4 +1,6 @@
 # coding: utf-8
+import unittest
+
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
@@ -66,21 +68,21 @@ class ApiCollectionPermissionTestCase(BaseApiCollectionPermissionTestCase):
         response = self._logged_user_gives_permission('someuser', PERM_VIEW_COLLECTION)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_viewers_can_not_give_permissions(self):
+    def test_viewers_cannot_give_permissions(self):
         self._logged_user_gives_permission('someuser', PERM_VIEW_COLLECTION)
         self.client.login(username='someuser', password='someuser')
         # Current user is now: `self.someuser`
         response = self._logged_user_gives_permission('anotheruser', PERM_VIEW_COLLECTION)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_editors_can_give_permissions(self):
+    def test_editors_cannot_give_permissions(self):
         self._logged_user_gives_permission('someuser', PERM_CHANGE_COLLECTION)
         self.client.login(username='someuser', password='someuser')
         # Current user is now: `self.someuser`
         response = self._logged_user_gives_permission('anotheruser', PERM_VIEW_COLLECTION)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_anonymous_can_not_give_permissions(self):
+    def test_anonymous_cannot_give_permissions(self):
         self.client.logout()
         response = self._logged_user_gives_permission('someuser', PERM_VIEW_COLLECTION)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -131,7 +133,7 @@ class ApiCollectionPermissionListTestCase(BaseApiCollectionPermissionTestCase):
 
         self.assertEqual(expected_perms, obj_perms)
 
-    def test_editors_see_all_assignments(self):
+    def test_editors_see_only_self_anon_and_owner_assignments(self):
 
         self.client.login(username='someuser', password='someuser')
         permission_list_response = self.client.get(self.collection_permissions_list_url,
@@ -142,7 +144,6 @@ class ApiCollectionPermissionListTestCase(BaseApiCollectionPermissionTestCase):
         anotheruser_perms = self.collection.get_perms(self.anotheruser)
         results = permission_list_response.data
 
-        # As an editor of the collection. `someuser` should see all.
         expected_perms = []
         for admin_perm in admin_perms:
             if admin_perm in Collection.get_assignable_permissions():
@@ -150,9 +151,7 @@ class ApiCollectionPermissionListTestCase(BaseApiCollectionPermissionTestCase):
         for someuser_perm in someuser_perms:
             if someuser_perm in Collection.get_assignable_permissions():
                 expected_perms.append((self.someuser.username, someuser_perm))
-        for anotheruser_perm in anotheruser_perms:
-            if anotheruser_perm in Collection.get_assignable_permissions():
-                expected_perms.append((self.anotheruser.username, anotheruser_perm))
+        # Permissions assigned to self.anotheruser must not appear
 
         expected_perms = sorted(expected_perms, key=lambda element: (element[0],
                                                                      element[1]))
@@ -218,6 +217,7 @@ class ApiBulkCollectionPermissionTestCase(BaseApiCollectionPermissionTestCase):
         response = self.client.post(url, data, format='json')
         return response
 
+    @unittest.skip('TODO: bring this back once we can assign manage_asset to someuser')
     def test_cannot_assign_permissions_to_owner(self):
         self._logged_user_gives_permission('someuser', PERM_CHANGE_COLLECTION)
         self.client.login(username='someuser', password='someuser')

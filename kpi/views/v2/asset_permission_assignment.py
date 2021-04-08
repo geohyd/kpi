@@ -11,7 +11,7 @@ from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from kpi.constants import (
     CLONE_ARG_NAME,
-    PERM_SHARE_ASSET,
+    PERM_MANAGE_ASSET,
     PERM_VIEW_ASSET,
 )
 from kpi.deployment_backends.kc_access.utils import \
@@ -43,7 +43,6 @@ class AssetPermissionAssignmentViewSet(AssetNestedObjectViewsetMixin,
     **Roles' permissions:**
 
     - Owner sees all permissions
-    - Editors see all permissions
     - Viewers see owner's permissions and their permissions
     - Anonymous users see only owner's permissions
 
@@ -161,6 +160,8 @@ class AssetPermissionAssignmentViewSet(AssetNestedObjectViewsetMixin,
     serializer_class = AssetPermissionAssignmentSerializer
     permission_classes = (AssetNestedObjectPermission,)
     pagination_class = None
+    # filter_backends = Just kidding! Look at this instead:
+    #     kpi.utils.object_permission_helper.ObjectPermissionHelper.get_user_permission_assignments_queryset
 
     @action(detail=False, methods=['POST'], renderer_classes=[renderers.JSONRenderer],
             url_path='bulk')
@@ -178,7 +179,12 @@ class AssetPermissionAssignmentViewSet(AssetNestedObjectViewsetMixin,
         # one assignment fails.
         with transaction.atomic():
 
-            # First delete all assignments before assigning new ones.
+            # First, delete *all* `from_kc_only` flags
+            # TODO: Remove after kobotoolbox/kobocat#642
+            if self.asset.has_deployment:
+                self.asset.deployment.remove_from_kc_only_flag()
+
+            # Then delete all assignments before assigning new ones.
             # If something fails later, this query should rollback
             perms_to_delete = self.asset.permissions.exclude(
                 user__username=self.asset.owner.username)
@@ -188,10 +194,10 @@ class AssetPermissionAssignmentViewSet(AssetNestedObjectViewsetMixin,
 
             for assignment in assignments:
                 context_ = dict(self.get_serializer_context())
+                context_['bulk'] = True
                 if 'partial_permissions' in assignment:
-                    context_.update({
-                        'partial_permissions': assignment['partial_permissions']
-                    })
+                    context_['partial_permissions'] = assignment['partial_permissions']
+
                 serializer = AssetBulkInsertPermissionSerializer(
                     data=assignment,
                     context=context_
@@ -211,7 +217,7 @@ class AssetPermissionAssignmentViewSet(AssetNestedObjectViewsetMixin,
         source_asset = get_object_or_404(Asset, uid=source_asset_uid)
         user = request.user
 
-        if user.has_perm(PERM_SHARE_ASSET, self.asset) and \
+        if user.has_perm(PERM_MANAGE_ASSET, self.asset) and \
                 user.has_perm(PERM_VIEW_ASSET, source_asset):
             if not self.asset.copy_permissions_from(source_asset):
                 http_status = status.HTTP_400_BAD_REQUEST

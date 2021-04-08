@@ -15,9 +15,8 @@ import CopyToClipboard from 'react-copy-to-clipboard';
 import {MODAL_TYPES} from '../constants';
 import {
   formatTime,
-  t,
   notify
-} from '../utils';
+} from 'utils';
 
 const DVCOUNT_LIMIT_MINIMUM = 20;
 
@@ -83,21 +82,21 @@ export class FormLanding extends React.Component {
           <bem.FormView__cell m='buttons'>
             {userCanEdit && this.state.has_deployment && this.state.deployment__active &&
               <a
-                className='mdl-button mdl-button--raised mdl-button--colored'
+                className='kobo-button kobo-button--blue'
                 onClick={this.deployAsset}>
                   {t('redeploy')}
               </a>
             }
             {userCanEdit && !this.state.has_deployment && !this.state.deployment__active &&
               <a
-                className='mdl-button mdl-button--raised mdl-button--colored'
+                className='kobo-button kobo-button--blue'
                 onClick={this.deployAsset}>
                   {t('deploy')}
               </a>
             }
             {userCanEdit && this.state.has_deployment && !this.state.deployment__active &&
               <a
-                className='mdl-button mdl-button--raised mdl-button--colored'
+                className='kobo-button kobo-button--blue'
                 onClick={this.callUnarchiveAsset}>
                   {t('unarchive')}
               </a>
@@ -143,6 +142,13 @@ export class FormLanding extends React.Component {
     evt.preventDefault();
     stores.pageState.showModal({
       type: MODAL_TYPES.FORM_LANGUAGES,
+      asset: this.state
+    });
+  }
+  showEncryptionModal (evt) {
+    evt.preventDefault();
+    stores.pageState.showModal({
+      type: MODAL_TYPES.ENCRYPT_FORM,
       asset: this.state
     });
   }
@@ -217,13 +223,13 @@ export class FormLanding extends React.Component {
         </bem.FormView__cell>
         {this.state.deployed_versions.count > 1 &&
           <bem.FormView__cell m={['centered']}>
-            <button className='mdl-button mdl-button--colored' onClick={this.toggleDeploymentHistory}>
+            <bem.Button m='colored' onClick={this.toggleDeploymentHistory}>
               {this.state.historyExpanded ? t('Hide full history') : t('Show full history')}
-            </button>
+            </bem.Button>
             {(this.state.historyExpanded && this.state.DVCOUNT_LIMIT < dvcount) &&
-              <button className='mdl-button mdl-button--colored' onClick={this.loadMoreVersions}>
+              <bem.Button m='colored' onClick={this.loadMoreVersions}>
                 {t('Load more')}
-              </button>
+              </bem.Button>
             }
           </bem.FormView__cell>
         }
@@ -242,7 +248,7 @@ export class FormLanding extends React.Component {
         }],
         ['single_url', {
           label: t('Online-Only (single submission)'),
-          desc: t('This allows a single submission, and can be paired with the "returnURL" parameter to redirect the user to a URL of your choice after the form has been submitted.')
+          desc: t('This allows a single submission, and can be paired with the "return_url" parameter to redirect the user to a URL of your choice after the form has been submitted.')
         }],
         ['single_once_url', {
           label: t('Online-only (once per respondent)'),
@@ -437,11 +443,6 @@ export class FormLanding extends React.Component {
               );
           })}
 
-          <bem.PopoverMenu__link href='#pdf' className='is-edge'>
-            <i className='k-icon-pdf'/>
-            {t('Download PDF')}
-          </bem.PopoverMenu__link>
-
           {userCanEdit &&
             <bem.PopoverMenu__link onClick={this.showSharingModal}>
               <i className='k-icon-share'/>
@@ -469,6 +470,12 @@ export class FormLanding extends React.Component {
               {t('Manage Translations')}
             </bem.PopoverMenu__link>
           }
+          { /* temporarily disabled
+          <bem.PopoverMenu__link onClick={this.showEncryptionModal}>
+            <i className='k-icon-lock'/>
+            {t('Manage Encryption')}
+          </bem.PopoverMenu__link>
+          */ }
         </ui.PopoverMenu>
       </bem.FormView__group>
     );
@@ -515,14 +522,12 @@ export class FormLanding extends React.Component {
 
     if (this.state.uid === undefined) {
       return (
-        <ui.Panel>
-          <bem.Loading>
-            <bem.Loading__inner>
-              <i />
-              {t('loading...')}
-            </bem.Loading__inner>
-          </bem.Loading>
-        </ui.Panel>
+        <bem.Loading>
+          <bem.Loading__inner>
+            <i />
+            {t('loading...')}
+          </bem.Loading__inner>
+        </bem.Loading>
       );
     }
 
@@ -544,7 +549,7 @@ export class FormLanding extends React.Component {
               {this.isFormRedeploymentNeeded() &&
                 <bem.FormView__cell m='warning'>
                   <i className='k-icon-alert' />
-                  {t('If you want to make these changes public, you must deploy this form.')}
+                  <p>{t('If you want to make these changes public, you must deploy this form.')}</p>
                 </bem.FormView__cell>
               }
               {this.renderFormInfo(userCanEdit)}

@@ -9,8 +9,7 @@ import {bem} from '../bem';
 import ui from '../ui';
 import {searches} from '../searches';
 import {stores} from '../stores';
-
-import {t} from '../utils';
+import {CATEGORY_LABELS} from 'js/constants';
 
 class SidebarFormsList extends Reflux.Component {
   constructor(props) {
@@ -95,13 +94,6 @@ class SidebarFormsList extends Reflux.Component {
     return (
       <bem.FormSidebar>
         {
-          s.defaultQueryState === 'done' &&
-          <bem.FormSidebar__label m={'active-projects'} className='is-edge'>
-            <i className='k-icon-projects' />
-            {t('Active Projects')}
-          </bem.FormSidebar__label>
-        }
-        {
           (() => {
             if (s.defaultQueryState === 'loading') {
               return (
@@ -124,7 +116,7 @@ class SidebarFormsList extends Reflux.Component {
                                             onClick={this.toggleCategory(category)}
                                             key={`${category}-label`}>
                       <i />
-                      {t(category)}
+                      {CATEGORY_LABELS[category]}
                       <bem.FormSidebar__labelCount>
                         {s[activeItems][category].length}
                       </bem.FormSidebar__labelCount>
@@ -141,10 +133,6 @@ class SidebarFormsList extends Reflux.Component {
             }
           })()
         }
-        <bem.FormSidebar__label className='is-edge'>
-          <i className='k-icon-trash' />
-          {t('Deleted')} (#)
-        </bem.FormSidebar__label>
       </bem.FormSidebar>
     );
   }
