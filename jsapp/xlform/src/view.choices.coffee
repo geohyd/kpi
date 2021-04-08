@@ -88,13 +88,13 @@ module.exports = do ->
     render: ->
       @t = $("<i class=\"fa fa-trash-o js-remove-option\">")
       @pw = $("<div class=\"editable-wrapper js-cancel-select-row\">")
-      @p = $("<input placeholder=\"#{_t("This option has no name")}\" class=\"js-cancel-select-row option-view-input\">")
-      @c = $("<code><label>#{_t("XML value:")}</label> <input type=\"text\" class=\"js-cancel-select-row\"></input></code>")
+      @p = $("<input class=\"js-cancel-select-row\">")
+      @c = $("<code><label>#{_t("XML value:")}</label> <input type=\"text\" placeholder=\"AUTOMATIC\"  class=\"js-cancel-select-row\"></input></code>")
       @d = $('<div>')
       if @model
         @p.val @model.get("label") || 'Empty'
         @$el.attr("data-option-id", @model.cid)
-        $('input', @c).val @model.get("name") || 'AUTOMATIC'
+        $('input', @c).val @model.get("name")
         @model.set('setManually', true)
       else
         @model = new $choices.Option()

@@ -77,6 +77,7 @@ export class ProjectDownloads extends React.Component {
     }.bind(this), 5000);
 
     if (this.state.type.indexOf('_legacy') < 0) {
+      // ANTEA add || this.state.type.startsWith("antea_")
       if (['xls', 'csv', 'spss_labels'].includes(this.state.type) || this.state.type.startsWith("antea_")) {
         let postData = {
           source: this.props.asset.url,
@@ -91,6 +92,7 @@ export class ProjectDownloads extends React.Component {
             group_sep: this.state.groupSep
           });
         }
+        // ANTEA EXPORT
         if (this.state.type.startsWith("antea_")) {
           //Default antea export parameters
           Object.assign(postData, {

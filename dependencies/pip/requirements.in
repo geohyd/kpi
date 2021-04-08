@@ -76,6 +76,9 @@ XlsxWriter
 pyopenssl
 ndg-httpsclient
 pyasn1
+<<<<<<< HEAD
 # For Ldap
 django-auth-ldap==1.3.0
 python-ldap==3.2.0
+=======
+>>>>>>> upstream_2_020_25
