@@ -162,10 +162,8 @@ class AssetsListApiTests(BaseAssetTestCase):
         )
         self.assertListEqual(results, [template.uid, question.uid])
 
-        # TODO Uncomment the 2 lines below when
-        # https://github.com/kobotoolbox/kpi/issues/2635 is merged
-        # results = uids_from_search_results('🧀')
-        # self.assertListEqual(results, [template.uid])
+        results = uids_from_search_results('🧀')
+        self.assertListEqual(results, [template.uid])
 
         results = uids_from_search_results('pk:alrighty')
         self.assertListEqual(results, [])
@@ -418,10 +416,14 @@ class AssetsDetailApiTests(BaseAssetTestCase):
         expected_response = [
             {'label': 'Add submissions',
              'url': 'http://testserver/api/v2/permissions/add_submissions/'},
-            {'label': 'Edit and delete submissions',
-             'url': 'http://testserver/api/v2/permissions/change_submissions/'},
+            {'label': 'Delete submissions',
+             'url': 'http://testserver/api/v2/permissions/delete_submissions/'},
             {'label': 'Edit form',
              'url': 'http://testserver/api/v2/permissions/change_asset/'},
+            {'label': 'Edit submissions',
+             'url': 'http://testserver/api/v2/permissions/change_submissions/'},
+            {'label': 'Manage project',
+             'url': 'http://testserver/api/v2/permissions/manage_asset/'},
             {'label': 'Validate submissions',
              'url': 'http://testserver/api/v2/permissions/validate_submissions/'},
             {'label': 'View form',
@@ -436,6 +438,7 @@ class AssetsDetailApiTests(BaseAssetTestCase):
             response.data['assignable_permissions'],
             key=lambda assignable_perm_: assignable_perm_['label']
         )
+
         for index, assignable_perm in enumerate(assignable_permissions):
             self.assertEqual(assignable_perm['url'],
                              expected_response[index]['url'])
@@ -450,6 +453,8 @@ class AssetsDetailApiTests(BaseAssetTestCase):
         expected_response = [
             {'label': 'Edit question',
              'url': 'http://testserver/api/v2/permissions/change_asset/'},
+            {'label': 'Manage question',
+             'url': 'http://testserver/api/v2/permissions/manage_asset/'},
             {'label': 'View question',
              'url': 'http://testserver/api/v2/permissions/view_asset/'},
         ]
@@ -525,10 +530,6 @@ class AssetFileTest(BaseTestCase):
             sorted(list(Asset.get_assignable_permissions(False) +
                         Asset.CALCULATED_PERMISSIONS))
         )
-
-    @staticmethod
-    def absolute_reverse(*args, **kwargs):
-        return 'http://testserver/' + reverse(*args, **kwargs).lstrip('/')
 
     def get_asset_file_content(self, url):
         response = self.client.get(url)

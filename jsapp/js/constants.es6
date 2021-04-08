@@ -2,8 +2,6 @@
  * A list of all shareable constants for the application.
  */
 
-import {t} from './utils';
-
 export const ROOT_URL = (() => {
   // This is an "absolute path reference (a URL without the domain name)"
   // according to the Django docs
@@ -29,10 +27,12 @@ export const PERMISSIONS_CODENAMES = new Map();
 new Set([
   'view_asset',
   'change_asset',
+  'manage_asset',
   'add_submissions',
   'view_submissions',
   'partial_submissions',
   'change_submissions',
+  'delete_submissions',
   'validate_submissions',
   'view_collection',
   'change_collection'
@@ -68,7 +68,8 @@ export const MODAL_TYPES = {
   TABLE_COLUMNS: 'table-columns',
   REST_SERVICES: 'rest-services',
   FORM_LANGUAGES: 'form-languages',
-  FORM_TRANSLATIONS_TABLE: 'form-translation-table'
+  FORM_TRANSLATIONS_TABLE: 'form-translation-table',
+  ENCRYPT_FORM: 'encrypt-form'
 };
 
 export const PROJECT_SETTINGS_CONTEXTS = {
@@ -315,6 +316,14 @@ export const QUESTION_TYPES = new Map([
     }
   ],
   [
+    'hidden',
+    {
+      label: t('Hidden'),
+      faIcon: 'fa-eye-slash',
+      id: 'hidden'
+    }
+  ],
+  [
     'file',
     {
       label: t('File'),
@@ -345,7 +354,44 @@ new Set([
   'audit'
 ]).forEach((codename) => {META_QUESTION_TYPES.set(codename, codename);});
 
+export const GROUP_TYPES_BEGIN = new Map();
+new Set([
+  'begin_group',
+  'begin_score',
+  'begin_rank',
+  'begin_kobomatrix',
+  'begin_repeat',
+]).forEach((kind) => {GROUP_TYPES_BEGIN.set(kind, kind);});
+
+export const GROUP_TYPES_END = new Map();
+new Set([
+  'end_group',
+  'end_score',
+  'end_rank',
+  'end_kobomatrix',
+  'end_repeat',
+]).forEach((kind) => {GROUP_TYPES_END.set(kind, kind);});
+
+export const FORM_VERSION_NAME = '__version__';
+
+// a custom question type for score
+export const SCORE_ROW_TYPE = 'score__row';
+
+// a custom question type for rank
+export const RANK_LEVEL_TYPE = 'rank__level';
+
+export const MATRIX_PAIR_PROPS = {
+  inSurvey: 'kobo--matrix_list',
+  inChoices: 'list_name'
+};
+
 export const NAME_MAX_LENGTH = 255;
+
+export const CATEGORY_LABELS = {
+  Deployed: t('Deployed'),
+  Draft: t('Draft'),
+  Archived: t('Archived')
+};
 
 const constants = {
   ROOT_URL,
@@ -364,7 +410,13 @@ const constants = {
   ASSET_KINDS,
   QUESTION_TYPES,
   META_QUESTION_TYPES,
-  NAME_MAX_LENGTH
+  GROUP_TYPES_BEGIN,
+  GROUP_TYPES_END,
+  FORM_VERSION_NAME,
+  SCORE_ROW_TYPE,
+  RANK_LEVEL_TYPE,
+  NAME_MAX_LENGTH,
+  CATEGORY_LABELS,
 };
 
 export default constants;

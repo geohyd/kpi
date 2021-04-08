@@ -1,10 +1,11 @@
 # coding: utf-8
 from django.contrib.auth.models import User, Permission
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
-from kpi.constants import PERM_VIEW_ASSET, PERM_CHANGE_ASSET, \
-    PERM_SHARE_ASSET
+from kpi.constants import PERM_VIEW_ASSET, PERM_CHANGE_ASSET
+from kpi.models import Asset, Collection, ObjectPermission
 from kpi.models.object_permission import get_anonymous_user
 from kpi.tests.kpi_test_case import KpiTestCase
 from kpi.urls.router_api_v2 import URL_NAMESPACE as ROUTER_URL_NAMESPACE
@@ -250,7 +251,7 @@ class ApiPermissionsTestCase(KpiTestCase):
         # Give "someuser" edit permissions on an asset owned by "admin"
         self.add_perm(self.admin_asset, self.someuser, 'change_')
         # Confirm that "someuser" has received the implied permissions
-        expected_perms = [PERM_CHANGE_ASSET, PERM_SHARE_ASSET, PERM_VIEW_ASSET]
+        expected_perms = [PERM_CHANGE_ASSET, PERM_VIEW_ASSET]
         self.assertListEqual(
             sorted(self.admin_asset.get_perms(self.someuser)),
             expected_perms
@@ -289,7 +290,7 @@ class ApiPermissionsTestCase(KpiTestCase):
             new_asset.get_users_with_perms(attach_perms=True)
         )
 
-    def test_copy_permissions_between_non_owned_assets(self):
+    def test_cannot_copy_permissions_between_non_owned_assets(self):
         # Give "someuser" view permissions on an asset owned by "admin"
         self.add_perm(self.admin_asset, self.someuser, 'view_')
         self.assertTrue(self.someuser.has_perm(PERM_VIEW_ASSET, self.admin_asset))
@@ -301,6 +302,9 @@ class ApiPermissionsTestCase(KpiTestCase):
         # Give "someuser" edit permissions on the new asset owned by "admin"
         self.add_perm(new_asset, self.someuser, 'change_')
         self.assertTrue(self.someuser.has_perm(PERM_CHANGE_ASSET, new_asset))
+        new_asset_perms_before_copy_attempt = new_asset.get_users_with_perms(
+            attach_perms=True
+        )
         # Perform the permissions copy via the API endpoint
         self.client.login(
             username=self.someuser.username, password=self.someuser_password
@@ -314,17 +318,15 @@ class ApiPermissionsTestCase(KpiTestCase):
                 'api_v2:asset-permission-assignment-clone',
                 kwargs={'parent_lookup_asset': new_asset.uid}
             )
-        self.client.patch(
+        response = self.client.patch(
             dest_asset_perm_url, data={'clone_from': self.admin_asset.uid}
         )
-        # Check the result; since the source and destination have the same
-        # owner, the permissions should be identical
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # Check the result; nothing should have changed
         self.assertDictEqual(
-            self.admin_asset.get_users_with_perms(attach_perms=True),
+            new_asset_perms_before_copy_attempt,
             new_asset.get_users_with_perms(attach_perms=True)
         )
-        # Fun fact: the copying user has obliterated their own privileges
-        self.assertFalse(self.someuser.has_perm(PERM_CHANGE_ASSET, new_asset))
 
     def test_user_cannot_copy_permissions_from_non_viewable_asset(self):
         # Make sure "someuser" cannot view the asset owned by "admin"
@@ -509,136 +511,164 @@ class ApiPermissionsTestCase(KpiTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-# TODO Fix permissions tests
-# class ApiAssignedPermissionsTestCase(KpiTestCase):
-#     """
-#     An obnoxiously large amount of code to test that the endpoint for listing
-#     assigned permissions complies with the following rules:
-#
-#         * Superusers see it all (thank goodness for pagination)
-#         * Anonymous users see nothing
-#         * Regular users see everything that concerns them, namely all
-#           permissions for all objects to which they have been assigned any
-#           permission
-#
-#     See also `kpi.filters.KpiAssignedObjectPermissionsFilter`
-#     """
-#
-#     URL_NAMESPACE = ROUTER_URL_NAMESPACE
-#
-#     def setUp(self):
-#         super().setUp()
-#         self.anon = get_anonymous_user()
-#         self.super = User.objects.get(username='admin')
-#         self.super_password = 'pass'
-#         self.someuser = User.objects.get(username='someuser')
-#         self.someuser_password = 'someuser'
-#         self.anotheruser = User.objects.get(username='anotheruser')
-#         self.anotheruser_password = 'anotheruser'
-#
-#         # Find an unused, common PK for both Asset and Collection--useful for
-#         # catching bugs related to content types like
-#         # https://github.com/kobotoolbox/kpi/issues/2270
-#         last_asset = Asset.objects.order_by('pk').last()
-#         last_collection = Collection.objects.order_by('pk').last()
-#         available_pk = 1 + max(last_asset.pk if last_asset else 1,
-#                                last_collection.pk if last_collection else 1)
-#
-#         def create_object_with_specific_pk(model, pk, **kwargs):
-#             obj = model()
-#             obj.pk = pk
-#             for k, v in kwargs.items():
-#                 setattr(obj, k, v)
-#             obj.save()
-#             return obj
-#
-#         self.collection = create_object_with_specific_pk(
-#             Collection,
-#             available_pk,
-#             owner=self.someuser,
-#         )
-#         self.asset = create_object_with_specific_pk(
-#             Asset, available_pk, owner=self.someuser,
-#             # perenially evil `auto_now_add` leaves the field NULL if a pk is
-#             # specified, leading to `IntegrityError` unless we set it manually
-#             date_created=timezone.now(),
-#         )
-#
-#     def test_anon_cannot_list_permissions(self):
-#         self.asset.assign_perm(self.anon, 'view_asset')
-#         self.assertTrue(self.anon.has_perm('view_asset', self.asset))
-#
-#         url = reverse(self._get_endpoint('objectpermission-list'))
-#         response = self.client.get(url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertListEqual(response.data['results'], [])
-#
-#         self.asset.remove_perm(self.anon, 'view_asset')
-#         self.assertFalse(self.anon.has_perm('view_asset', self.asset))
-#
-#     def test_user_sees_all_permissions_on_assigned_objects(self):
-#         self.asset.assign_perm(self.anotheruser, 'view_asset')
-#         self.assertTrue(self.anotheruser.has_perm('view_asset', self.asset))
-#
-#         self.client.login(username=self.anotheruser.username,
-#                           password=self.anotheruser_password)
-#
-#         url = reverse(self._get_endpoint('objectpermission-list'))
-#         response = self.client.get(url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#
-#         returned_uids = [r['uid'] for r in response.data['results']]
-#         all_obj_perms = ObjectPermission.objects.filter_for_object(self.asset)
-#
-#         self.assertTrue(
-#             set(returned_uids).issuperset(
-#                 all_obj_perms.values_list('uid', flat=True)
-#             )
-#         )
-#
-#         self.asset.remove_perm(self.anotheruser, 'view_asset')
-#         self.assertFalse(self.anotheruser.has_perm('view_asset', self.asset))
-#
-#     def test_user_cannot_see_permissions_on_unassigned_objects(self):
-#         self.asset.assign_perm(self.anotheruser, 'view_asset')
-#         self.assertTrue(self.anotheruser.has_perm('view_asset', self.asset))
-#
-#         self.client.login(username=self.anotheruser.username,
-#                           password=self.anotheruser_password)
-#
-#         url = reverse(self._get_endpoint('objectpermission-list'))
-#         response = self.client.get(url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#
-#         returned_uids = [r['uid'] for r in response.data['results']]
-#         other_obj_perms = ObjectPermission.objects.filter_for_object(
-#             self.collection)
-#
-#         self.assertFalse(
-#             set(returned_uids).intersection(
-#                 other_obj_perms.values_list('uid', flat=True)
-#             )
-#         )
-#
-#         self.asset.remove_perm(self.anotheruser, 'view_asset')
-#         self.assertFalse(self.anotheruser.has_perm('view_asset', self.asset))
-#
-#     def test_superuser_sees_all_permissions(self):
-#         self.asset.assign_perm(self.anotheruser, 'view_asset')
-#         self.assertTrue(self.anotheruser.has_perm('view_asset', self.asset))
-#
-#         self.client.login(username=self.super.username,
-#                           password=self.super_password)
-#
-#         url = reverse(self._get_endpoint('objectpermission-list'))
-#         response = self.client.get(url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#
-#         returned_uids = [r['uid'] for r in response.data['results']]
-#         self.assertListEqual(
-#             sorted(returned_uids),
-#             sorted(ObjectPermission.objects.values_list('uid', flat=True))
-#         )
-#
-#         self.asset.remove_perm(self.anotheruser, 'view_asset')
-#         self.assertFalse(self.anotheruser.has_perm('view_asset', self.asset))
+class ApiAssignedPermissionsTestCase(KpiTestCase):
+    """
+    An obnoxiously large amount of code to test that the endpoint for listing
+    assigned permissions complies with the following rules:
+
+        * Superusers see it all (and there is *no* pagination)
+        * Anonymous users see nothing
+        * Regular users see everything that concerns them, namely all
+          their own permissions and all the owners' permissions for all objects
+          to which they have been assigned any permission
+
+    See also
+        kpi.utils.object_permission_helper.ObjectPermissionHelper.get_user_permission_assignments_queryset
+    """
+
+    # TODO: does this duplicate stuff in
+    # test_api_asset_permission_assignment.py / should it be moved there?
+
+    URL_NAMESPACE = ROUTER_URL_NAMESPACE
+
+    def setUp(self):
+        super().setUp()
+        self.anon = get_anonymous_user()
+        self.super = User.objects.get(username='admin')
+        self.super_password = 'pass'
+        self.someuser = User.objects.get(username='someuser')
+        self.someuser_password = 'someuser'
+        self.anotheruser = User.objects.get(username='anotheruser')
+        self.anotheruser_password = 'anotheruser'
+
+        # Find an unused, common PK for both Asset and Collection--useful for
+        # catching bugs related to content types like
+        # https://github.com/kobotoolbox/kpi/issues/2270
+        last_asset = Asset.objects.order_by('pk').last()
+        last_collection = Collection.objects.order_by('pk').last()
+        available_pk = 1 + max(last_asset.pk if last_asset else 1,
+                               last_collection.pk if last_collection else 1)
+
+        def create_object_with_specific_pk(model, pk, **kwargs):
+            obj = model()
+            obj.pk = pk
+            for k, v in kwargs.items():
+                setattr(obj, k, v)
+            obj.save()
+            return obj
+
+        self.collection = create_object_with_specific_pk(
+            Collection,
+            available_pk,
+            owner=self.someuser,
+        )
+        self.asset = create_object_with_specific_pk(
+            Asset, available_pk, owner=self.someuser,
+            # perenially evil `auto_now_add` leaves the field NULL if a pk is
+            # specified, leading to `IntegrityError` unless we set it manually
+            date_created=timezone.now(),
+        )
+
+    def get_collection_perm_assignment_url(self, collection):
+        # TODO: REMOVE this when Collection is a type of Asset
+        return reverse(
+            self._get_endpoint('collection-permission-assignment-list'),
+            kwargs={'parent_lookup_collection': collection.uid}
+        )
+
+    def get_urls_for_collection_perm_assignment_objs(
+        self, perm_assignments, collection
+    ):
+        # TODO: REMOVE this when Collection is a type of Asset
+        return [
+            self.absolute_reverse(
+                self._get_endpoint('collection-permission-assignment-detail'),
+                kwargs={'uid': uid, 'parent_lookup_collection': collection.uid},
+            )
+            for uid in perm_assignments.values_list('uid', flat=True)
+        ]
+
+    def test_anon_only_sees_owner_permissions(self):
+        self.asset.assign_perm(self.anon, 'view_asset')
+        self.assertTrue(self.anon.has_perm('view_asset', self.asset))
+
+        url = self.get_asset_perm_assignment_list_url(self.asset)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        owner_url = self.absolute_reverse(
+            self._get_endpoint('user-detail'),
+            kwargs={'username': self.asset.owner.username},
+        )
+        self.assertSetEqual(
+            set((a['user'] for a in response.data)), set((owner_url,))
+        )
+
+    def test_user_sees_relevant_permissions_on_assigned_objects(self):
+        # A user with explicitly-assigned permissions should see their
+        # own permissions and the owner's permissions, but not permissions
+        # assigned to other users
+        self.asset.assign_perm(self.anotheruser, 'view_asset')
+        self.assertTrue(self.anotheruser.has_perm('view_asset', self.asset))
+
+        irrelevant_user = User.objects.create(username='mindyourown')
+        self.asset.assign_perm(irrelevant_user, 'view_asset')
+
+        self.client.login(username=self.anotheruser.username,
+                          password=self.anotheruser_password)
+
+        url = self.get_asset_perm_assignment_list_url(self.asset)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        returned_urls = [r['url'] for r in response.data]
+        all_obj_perms = ObjectPermission.objects.filter_for_object(self.asset)
+        relevant_obj_perms = all_obj_perms.filter(
+            user__in=(self.asset.owner, self.anotheruser),
+            permission__codename__in=self.asset.get_assignable_permissions(
+                with_partial=False
+            ),
+        )
+
+        self.assertListEqual(
+            sorted(returned_urls),
+            sorted(
+                self.get_urls_for_asset_perm_assignment_objs(
+                    relevant_obj_perms, asset=self.asset
+                )
+            ),
+        )
+
+    def test_user_cannot_see_permissions_on_unassigned_objects(self):
+        self.asset.assign_perm(self.anotheruser, 'view_asset')
+        self.assertTrue(self.anotheruser.has_perm('view_asset', self.asset))
+
+        self.client.login(username=self.anotheruser.username,
+                          password=self.anotheruser_password)
+
+        url = self.get_collection_perm_assignment_url(self.collection)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_superuser_sees_all_permissions(self):
+        self.asset.assign_perm(self.anotheruser, 'view_asset')
+        self.assertTrue(self.anotheruser.has_perm('view_asset', self.asset))
+
+        self.client.login(username=self.super.username,
+                          password=self.super_password)
+
+        url = self.get_asset_perm_assignment_list_url(self.asset)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        returned_urls = [r['url'] for r in response.data]
+        all_obj_perms = ObjectPermission.objects.filter_for_object(self.asset)
+
+        self.assertListEqual(
+            sorted(returned_urls),
+            sorted(
+                self.get_urls_for_asset_perm_assignment_objs(
+                    all_obj_perms, asset=self.asset
+                )
+            ),
+        )

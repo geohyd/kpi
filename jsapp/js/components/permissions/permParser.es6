@@ -6,7 +6,7 @@ import {
 import {
   buildUserUrl,
   getUsernameFromUrl
-} from 'js/utils';
+} from 'utils';
 
 /**
  * @typedef {Object} BackendPerm
@@ -19,6 +19,7 @@ import {
  * @property {string} data.username - Who give permissions to.
  * @property {boolean} data.formView - Is able to view forms.
  * @property {boolean} data.formEdit - Is able to edit forms.
+ * @property {boolean} data.formManage - Is able to change form permissions (and future stuff TBD).
  * @property {boolean} data.submissionsView - Is able to view submissions.
  * @property {boolean} data.submissionsViewPartial - If true, then able to view submissions only of some users.
  * @property {string[]} data.submissionsViewPartialUsers - Users mentioned in the above line.
@@ -60,6 +61,10 @@ function parseFormData(data) {
     parsed.push(buildBackendPerm(data.username, PERMISSIONS_CODENAMES.get('change_asset')));
   }
 
+  if (data.formManage) {
+    parsed.push(buildBackendPerm(data.username, PERMISSIONS_CODENAMES.get('manage_asset')));
+  }
+
   if (data.submissionsViewPartial) {
     let permObj = buildBackendPerm(data.username, PERMISSIONS_CODENAMES.get('partial_submissions'));
     permObj.partial_permissions = [{
@@ -77,6 +82,10 @@ function parseFormData(data) {
 
   if (data.submissionsEdit) {
     parsed.push(buildBackendPerm(data.username, PERMISSIONS_CODENAMES.get('change_submissions')));
+  }
+
+  if (data.submissionsDelete) {
+    parsed.push(buildBackendPerm(data.username, PERMISSIONS_CODENAMES.get('delete_submissions')));
   }
 
   if (data.submissionsValidate) {
@@ -155,6 +164,9 @@ function buildFormData(permissions) {
     if (perm.permission === permConfig.getPermissionByCodename(PERMISSIONS_CODENAMES.get('change_asset')).url) {
       formData.formEdit = true;
     }
+    if (perm.permission === permConfig.getPermissionByCodename(PERMISSIONS_CODENAMES.get('manage_asset')).url) {
+      formData.formManage = true;
+    }
     if (perm.permission === permConfig.getPermissionByCodename(PERMISSIONS_CODENAMES.get('partial_submissions')).url) {
       formData.submissionsView = true;
       formData.submissionsViewPartial = true;
@@ -174,6 +186,9 @@ function buildFormData(permissions) {
     }
     if (perm.permission === permConfig.getPermissionByCodename(PERMISSIONS_CODENAMES.get('change_submissions')).url) {
       formData.submissionsEdit = true;
+    }
+    if (perm.permission === permConfig.getPermissionByCodename(PERMISSIONS_CODENAMES.get('delete_submissions')).url) {
+      formData.submissionsDelete = true;
     }
     if (perm.permission === permConfig.getPermissionByCodename(PERMISSIONS_CODENAMES.get('validate_submissions')).url) {
       formData.submissionsValidate = true;
