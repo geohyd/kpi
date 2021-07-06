@@ -649,13 +649,14 @@ export default class ProjectExportsCreator extends React.Component {
     // make xls topmost (as most popular), then with non-legacy and finish with legacy
     const exportTypesOptions = [
       EXPORT_TYPES.xls,
-      EXPORT_TYPES.csv,
+      EXPORT_TYPES.antea,
+      EXPORT_TYPES.zip_legacy,
       EXPORT_TYPES.geojson,
+      EXPORT_TYPES.csv,
       EXPORT_TYPES.spss_labels,
       EXPORT_TYPES.csv_legacy,
       EXPORT_TYPES.kml_legacy,
       EXPORT_TYPES.xls_legacy,
-      EXPORT_TYPES.zip_legacy,
     ];
 
     return (
@@ -683,13 +684,16 @@ export default class ProjectExportsCreator extends React.Component {
           {this.renderExportTypeSelector()}
         </bem.ProjectDownloads__selectorRow>
 
-        <bem.FormView__cell m='warning'>
-          <i className='k-icon-alert' />
-          <p>{t('This export format will not be supported in the future. Please consider using one of the other export types available.')}</p>
-        </bem.FormView__cell>
+        {/*Disabled for Survea Tools*/}
+        {/*<bem.FormView__cell m='warning'>*/}
+        {/*  <i className='k-icon-alert' />*/}
+        {/*  <p>{t('This export format will not be supported in the future. Please consider using one of the other export types available.')}</p>*/}
+        {/*</bem.FormView__cell>*/}
 
         <div className='project-downloads__legacy-iframe-wrapper'>
           <iframe src={
+            (this.state.selectedExportType.value === 'antea') ?
+            '/tools/exports/' + this.props.asset.uid + '/':
             this.props.asset.deployment__data_download_links[this.state.selectedExportType.value]
           } />
         </div>
