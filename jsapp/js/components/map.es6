@@ -11,10 +11,6 @@ import ui from '../ui';
 import classNames from 'classnames';
 import omnivore from '@mapbox/leaflet-omnivore';
 import JSZip from 'jszip';
-// ANTEA START
-import $ from 'jquery';
-import _ from 'lodash';
-// ANTEA END
 import L from 'leaflet/dist/leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat/dist/leaflet-heat';
@@ -81,10 +77,6 @@ export class FormMap extends React.Component {
       fields: [],
       hasGeoPoint: hasGeoPoint,
       submissions: [],
-      // ANTEA START
-      layerpoints: {},
-      layersactive: false,
-      // ANTEA END
       error: false,
       isFullscreen: false,
       showExpandedLegend: true,
@@ -405,51 +397,7 @@ export class FormMap extends React.Component {
         }
 
         prepPoints.push(L.marker(item._geolocation, markerProps));
-      }
-	  // ANTEA START
-	 
-	  Object.keys(item).forEach(function (e) {
-          if (typeof item[e] === 'string') {
-			  let x_string = item[e].split(';');
-			  if (x_string.length > 1) {
-				let points = [];
-				for (let point of x_string) {
-					let point_string = point.split(' ');
-					if (point_string.length > 1) {
-						let y_float = parseFloat(point_string[0]);
-						let x_float = parseFloat(point_string[1]);
-						if (Number.isNaN(x_float) || Number.isNaN(y_float)) {
-							// console.log('Malformed coordinates : ' + submission[e]);
-						  return;
-						}
-						points.push([y_float, x_float]);
-					}
-				}
-				if (points[0][0] === _.last(points)[0] && points[0][1] === _.last(points)[1]) {
-					// console.log('polygone', points);
-				  if (!(Object.keys(_this.state.layerpoints).includes(e))){
-					  _this.state.layerpoints[e] = L.featureGroup();
-					  _this.state.layerpoints[e].on('click', _this.launchSubmissionModal);
-				  }
-				  let polygon = L.polygon(points, {sId: item._id});
-				  _this.state.layerpoints[e].addLayer(polygon);
-				} else {
-					// console.log('ligne', points);
-				  if (!(Object.keys(_this.state.layerpoints).includes(e))){
-					_this.state.layerpoints[e] = L.featureGroup();
-					  _this.state.layerpoints[e].on('click', _this.launchSubmissionModal);
-				  }
-				  let polyline = L.polyline(points, {sId: item._id});
-				  // L.path.touchHelper(polyline, {sId: submission._id}).addTo(_this.state.layerpoints[e]);
-				  _this.state.layerpoints[e].addLayer(polyline);
-				}
-			  }
-		  }
-		 
-      });
-	  // ANTEA END
-	  
-	  
+      }	  
     });
 
     if (prepPoints.length >= 0) {
@@ -743,38 +691,6 @@ export class FormMap extends React.Component {
     if (this.state.isFullscreen) {
       formViewModifiers.push('fullscreen');
     }
-// ANTEA START
-    let self = this;
-
-    const layersstyle = {
-		bottom: '50px',
-		position: 'absolute',
-		display: 'none'
-    };
-    const buttonstyle = {
-      'margin-top': '108px'
-    };
-
-
-    const items = [];
-    Object.keys(self.state.layerpoints).forEach(function (e) {
-      items.push(<div>
-            <label>
-                <input
-                  id={e}
-                  defaultChecked='true'
-                  onChange={function () {
-                    if($(document.getElementById(e)).prop('checked'))
-                      self.state.map.addLayer(self.state.layerpoints[e]);
-                    else
-                      self.state.map.removeLayer(self.state.layerpoints[e]);
-                  }}
-                  type='checkbox'/>
-              {e}
-            </label>
-        </div>);
-    });
-// ANTEA END
 
     return (
       <bem.FormView m={formViewModifiers} className='right-tooltip'>
@@ -801,29 +717,6 @@ export class FormMap extends React.Component {
           data-tip={t('Map display settings')}>
           <i className='k-icon-settings' />
         </bem.FormView__mapButton>
-        {/*ANTEA START*/}
-        <bem.FormView__mapButton
-          m={'display-all-geom'}
-          style={buttonstyle}
-          onClick={this.toggleLayerList}
-          data-tip={t('Display all geometry')}>
-          <i className='k-icon-layer'/>
-        </bem.FormView__mapButton>
-        <div
-          style={layersstyle}
-          className={'divlayers'}>
-            <ui.PopoverMenu type='viewby-menu'
-                            triggerLabel={t('Layers list')}
-                            m={'above'}
-                            clearPopover={this.state.clearDisaggregatedPopover}
-                            blurEventDisabled>
-              <bem.PopoverMenu__heading>
-                {t('Layers available')}
-              </bem.PopoverMenu__heading>
-              {items}
-            </ui.PopoverMenu>
-        </div>
-        {/*ANTEA END*/}
         {!viewby &&
           <bem.FormView__mapButton m={'heatmap'}
             onClick={this.showHeatmap}
