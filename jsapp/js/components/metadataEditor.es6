@@ -1,17 +1,15 @@
 import React from 'react';
 import autoBind from 'react-autobind';
-import Checkbox from 'js/components/checkbox';
-import TextBox from 'js/components/textBox';
-import {
-  assign,
-  t
-} from 'js/utils';
+import Checkbox from 'js/components/common/checkbox';
+import TextBox from 'js/components/common/textBox';
+import {assign} from 'utils';
 import {
   META_QUESTION_TYPES,
 } from 'js/constants';
 import {bem} from 'js/bem';
+import {stores} from 'js/stores';
 
-const AUDIT_HELP_URL = 'http://support.kobotoolbox.org/en/articles/2648050-audit-logging-meta-question-type';
+const AUDIT_SUPPORT_URL = 'audit_logging.html';
 
 /**
  * @prop {object} survey
@@ -34,7 +32,7 @@ export default class MetadataEditor extends React.Component {
     const newState = {
       metaProperties: []
     };
-    META_QUESTION_TYPES.forEach((metaType) => {
+    Object.keys(META_QUESTION_TYPES).forEach((metaType) => {
       const detail = this.getSurveyDetail(metaType);
       if (detail) {
         newState.metaProperties.push(assign({}, detail.attributes));
@@ -64,7 +62,7 @@ export default class MetadataEditor extends React.Component {
   }
 
   onAuditParametersChange(newVal) {
-    this.getSurveyDetail(META_QUESTION_TYPES.get('audit')).set('parameters', newVal);
+    this.getSurveyDetail(META_QUESTION_TYPES.audit).set('parameters', newVal);
     this.rebuildState();
     if (typeof this.props.onChange === 'function') {
       this.props.onChange();
@@ -72,12 +70,12 @@ export default class MetadataEditor extends React.Component {
   }
 
   isAuditEnabled() {
-    const metaProp = this.getMetaProperty(META_QUESTION_TYPES.get('audit'));
+    const metaProp = this.getMetaProperty(META_QUESTION_TYPES.audit);
     return metaProp.value === true;
   }
 
   getAuditParameters() {
-    const metaProp = this.getMetaProperty(META_QUESTION_TYPES.get('audit'));
+    const metaProp = this.getMetaProperty(META_QUESTION_TYPES.audit);
     return metaProp.parameters;
   }
 
@@ -85,12 +83,16 @@ export default class MetadataEditor extends React.Component {
     return (
       <React.Fragment>
         {t('Audit settings')}
-        <bem.TextBox__labelLink
-          href={AUDIT_HELP_URL}
-          target='_blank'
-        >
-          <i className='k-icon k-icon-help'/>
-        </bem.TextBox__labelLink>
+
+        { stores.serverEnvironment &&
+          stores.serverEnvironment.state.support_url &&
+          <bem.TextBox__labelLink
+            href={stores.serverEnvironment.state.support_url + AUDIT_SUPPORT_URL}
+            target='_blank'
+          >
+            <i className='k-icon k-icon-help'/>
+          </bem.TextBox__labelLink>
+        }
       </React.Fragment>
     );
   }
@@ -101,17 +103,17 @@ export default class MetadataEditor extends React.Component {
     }
 
     const leftColumn = [
-      META_QUESTION_TYPES.get('start'),
-      META_QUESTION_TYPES.get('end'),
-      META_QUESTION_TYPES.get('today'),
-      META_QUESTION_TYPES.get('deviceid'),
-      META_QUESTION_TYPES.get('audit')
+      META_QUESTION_TYPES.start,
+      META_QUESTION_TYPES.end,
+      META_QUESTION_TYPES.today,
+      META_QUESTION_TYPES.deviceid,
+      META_QUESTION_TYPES.audit,
     ];
     const rightColumn = [
-      META_QUESTION_TYPES.get('username'),
-      META_QUESTION_TYPES.get('simserial'),
-      META_QUESTION_TYPES.get('subscriberid'),
-      META_QUESTION_TYPES.get('phonenumber')
+      META_QUESTION_TYPES.username,
+      META_QUESTION_TYPES.simserial,
+      META_QUESTION_TYPES.subscriberid,
+      META_QUESTION_TYPES.phonenumber,
     ];
 
     return (

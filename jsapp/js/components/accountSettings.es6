@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import React from 'react';
 import reactMixin from 'react-mixin';
 import autoBind from 'react-autobind';
@@ -10,15 +9,12 @@ import {actions} from '../actions';
 import {bem} from '../bem';
 import {stores} from '../stores';
 import Select from 'react-select';
-import TextBox from './textBox';
-import Checkbox from './checkbox';
+import TextBox from 'js/components/common/textBox';
+import Checkbox from 'js/components/common/checkbox';
 import ApiTokenDisplay from './apiTokenDisplay';
 import {hashHistory} from 'react-router';
-import ui from '../ui';
-import {
-  t,
-  stringToColor,
-} from '../utils';
+import {stringToColor} from 'utils';
+import {ROUTES} from 'js/constants';
 
 const UNSAVED_CHANGES_WARNING = t('You have unsaved changes. Leave settings without saving?');
 
@@ -226,18 +222,16 @@ export default class AccountSettings extends React.Component {
       !stores.session.environment
     ) {
       return (
-        <ui.Panel>
-          <bem.AccountSettings>
-            <bem.AccountSettings__item>
-              <bem.Loading>
-                <bem.Loading__inner>
-                  <i />
-                  {t('loading...')}
-                </bem.Loading__inner>
-              </bem.Loading>
-            </bem.AccountSettings__item>
-          </bem.AccountSettings>
-        </ui.Panel>
+        <bem.AccountSettings>
+          <bem.AccountSettings__item>
+            <bem.Loading>
+              <bem.Loading__inner>
+                <i />
+                {t('loading...')}
+              </bem.Loading__inner>
+            </bem.Loading>
+          </bem.AccountSettings__item>
+        </bem.AccountSettings>
       );
     }
 
@@ -247,24 +241,24 @@ export default class AccountSettings extends React.Component {
     };
 
     return (
-      <DocumentTitle title={`${accountName} | Survea`}>
-      <ui.Panel>
+      <DocumentTitle title={`Survea - ${accountName}`}>
         <bem.AccountSettings>
           <bem.AccountSettings__actions>
-            <button
+            <bem.KoboButton
               onClick={this.updateProfile}
-              className='mdl-button mdl-button--raised mdl-button--colored'
+              m={['blue']}
             >
               {t('Save Changes')}
               {!this.state.isPristine && ' *'}
-            </button>
+            </bem.KoboButton>
 
-            <button
+            <bem.Button
               onClick={this.safeClose}
-              className='account-settings-close mdl-button mdl-button--icon'
+              m='icon'
+              className='account-settings-close'
             >
               <i className='k-icon k-icon-close'/>
-            </button>
+            </bem.Button>
           </bem.AccountSettings__actions>
 
           <bem.AccountSettings__item m={'column'}>
@@ -312,15 +306,16 @@ export default class AccountSettings extends React.Component {
 
               <bem.AccountSettings__item m='password'>
                 <a
-                  href='/#/change-password'
-                  className='mdl-button mdl-button--raised mdl-button--colored'
+                  href={`/#${ROUTES.CHANGE_PASSWORD}`}
+                  className='kobo-button kobo-button--teal'
                 >
                   {t('Modify Password')}
                 </a>
               </bem.AccountSettings__item>
+
               <ApiTokenDisplay/>
 
-              {/*<bem.AccountSettings__item>
+              {/*ANTEA Comment <bem.AccountSettings__item>
                 <TextBox
                   label={t('Organization')}
                   errors={this.state.fieldsErrors.organization}
@@ -337,10 +332,6 @@ export default class AccountSettings extends React.Component {
                   value={this.state.organizationWebsite}
                   onChange={this.organizationWebsiteChange}
                 />
-
-                <bem.AccountSettings__desc className='is-edge'>
-                  {t('This will be used to create a hyperlink for your organization name. ')}
-                </bem.AccountSettings__desc>
               </bem.AccountSettings__item>
 
               <bem.AccountSettings__item m='primary-sector'>
@@ -431,21 +422,6 @@ export default class AccountSettings extends React.Component {
                 </label>
               </bem.AccountSettings__item>
 
-              <bem.AccountSettings__item className='is-edge'>
-                <label>
-                  {t('Default Form Language')}
-
-                  <Select
-                    value={this.state.defaultLanguage}
-                    options={this.state.languageChoices}
-                    onChange={this.defaultLanguageChange}
-                    className='kobo-select'
-                    classNamePrefix='kobo-select'
-                    menuPlacement='auto'
-                  />
-                </label>
-              </bem.AccountSettings__item>
-
               <bem.AccountSettings__item m='social'>
                 <label>{t('Social')}</label>
 
@@ -491,7 +467,6 @@ export default class AccountSettings extends React.Component {
             </bem.AccountSettings__item>
           </bem.AccountSettings__item>
         </bem.AccountSettings>
-      </ui.Panel>
       </DocumentTitle>
     );
   }

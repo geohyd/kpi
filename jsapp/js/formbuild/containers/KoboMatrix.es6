@@ -2,12 +2,11 @@ import _ from 'underscore';
 import React from 'react';
 import autoBind from 'react-autobind';
 import { bemComponents } from 'js/libs/reactBemComponents';
-import { t } from '../../utils';
 import { sluggify, txtid } from '../../../xlform/src/model.utils';
 import { Map } from 'immutable';
 import Select from 'react-select';
 import alertify from 'alertifyjs';
-import Checkbox from 'js/components/checkbox';
+import Checkbox from 'js/components/common/checkbox';
 
 const bem = bemComponents({
   Matrix: 'kobomatrix',
