@@ -22,7 +22,8 @@ class RegistrationForm(registration_forms.RegistrationForm):
         label=_("Username"),
         error_messages={'invalid': USERNAME_INVALID_MESSAGE}
     )
-    """name = forms.CharField(
+    """ANTEA COMMENT
+    name = forms.CharField(
         label=_('Name'),
         required=False,
     )
@@ -57,10 +58,9 @@ class RegistrationForm(registration_forms.RegistrationForm):
         fields = [
             'username',
             'email'
-            # The 'password' field appears without adding it here; adding it
-            # anyway results in a duplicate
         ]
-        """fields = [
+        """ANTEA COMMENT
+        fields = [
             'name',
             'organization',
             'username',

@@ -4,8 +4,8 @@ import autoBind from 'react-autobind';
 import Reflux from 'reflux';
 import _ from 'underscore';
 import {dataInterface} from '../dataInterface';
-import Checkbox from './checkbox';
-import Radio from './radio';
+import Checkbox from 'js/components/common/checkbox';
+import Radio from 'js/components/common/radio';
 import {actions} from '../actions';
 import {bem} from '../bem';
 import {stores} from '../stores';
@@ -19,21 +19,17 @@ import ReportViewItem from './reportViewItem';
 
 import {
   assign,
-  t,
   launchPrinting
-} from '../utils';
-
-function labelVal(label, value) {
-  return {label: t(label), value: (value || label.toLowerCase().replace(/\W+/g, '_'))};
-}
+} from 'utils';
+import {REPORT_STYLES} from 'js/constants';
 
 let reportStyles = [
-  labelVal('Vertical'),
-  labelVal('Donut'),
-  labelVal('Area'),
-  labelVal('Horizontal'),
-  labelVal('Pie'),
-  labelVal('Line'),
+  REPORT_STYLES.vertical,
+  REPORT_STYLES.donut,
+  REPORT_STYLES.area,
+  REPORT_STYLES.horizontal,
+  REPORT_STYLES.pie,
+  REPORT_STYLES.line,
 ];
 
 class ChartTypePicker extends React.Component {
@@ -188,40 +184,6 @@ class ChartColorsPicker extends React.Component {
   }
 };
 
-class SizeSliderInput extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {value: this.props.default};
-    autoBind(this);
-  }
-  handleChange (event) {
-    this.props.onChange({
-      value: event.target.value,
-      id: this.props.name
-    });
-
-    this.setState({value: event.target.value});
-  }
-  render () {
-    return (
-      <div className='slider-item is-edge'>
-        <label>
-          {this.props.label}&nbsp;{this.state.value}
-        </label>
-        <input
-          className='mdl-slider'
-          id={this.props.name}
-          type='range'
-          min={this.props.min}
-          max={this.props.max}
-          value={this.state.value}
-          onChange={this.handleChange}
-          step='5' />
-      </div>
-    );
-  }
-};
-
 class CustomReportForm extends React.Component {
   constructor(props) {
     super(props);
@@ -288,19 +250,19 @@ class CustomReportForm extends React.Component {
         </div>
         <bem.Modal__footer>
           {this.props.asset.report_custom[crid] &&
-            <bem.Modal__footerButton
-              m='danger'
+            <bem.KoboButton
+              m='red'
               onClick={this.deleteCustomReport}
             >
               {t('Delete')}
-            </bem.Modal__footerButton>
+            </bem.KoboButton>
           }
-          <bem.Modal__footerButton
-            m='primary'
+          <bem.KoboButton
+            m='blue'
             onClick={this.saveCustomReport}
           >
             {t('Save')}
-          </bem.Modal__footerButton>
+          </bem.KoboButton>
         </bem.Modal__footer>
       </div>
     );
@@ -407,10 +369,6 @@ class QuestionGraphSettings extends React.Component {
                 <ChartColorsPicker
                   defaultStyle={reportStyle}
                   onChange={this.questionStyleChange} />
-                <SizeSliderInput
-                  name='width' min='300' max='900' default={reportStyle.graphWidth}
-                  label={t('Width: ')}
-                  onChange={this.questionStyleChange} />
               </div>
             }
           </div>
@@ -418,13 +376,13 @@ class QuestionGraphSettings extends React.Component {
 
         <ui.Modal.Footer>
           {(reportStyle.report_type || reportStyle.report_colors || reportStyle.width) &&
-            <button className='mdl-button reset' onClick={this.saveQS.bind(this, true)}>
+            <bem.Button className='reset' onClick={this.saveQS.bind(this, true)}>
               {t('Reset')}
-            </button>
+            </bem.Button>
           }
-          <button className='mdl-button primary' onClick={this.saveQS.bind(this, false)}>
+          <bem.Button className='primary' onClick={this.saveQS.bind(this, false)}>
             {t('Save')}
-          </button>
+          </bem.Button>
         </ui.Modal.Footer>
       </bem.GraphSettings>
     );
@@ -681,10 +639,6 @@ class ReportStyleSettings extends React.Component {
                 <ChartColorsPicker
                   defaultStyle={reportStyle}
                   onChange={this.reportStyleChange} />
-                <SizeSliderInput
-                  name='width' min='300' max='900' default={reportStyle.graphWidth}
-                  label={t('Width: ')}
-                  onChange={this.reportSizeChange} />
               </div>
             }
             {tabs[this.state.activeModalTab] === t('Group By') && groupByOptions.length > 1 &&
@@ -709,9 +663,9 @@ class ReportStyleSettings extends React.Component {
             }
           </div>
           <ui.Modal.Footer>
-            <bem.Modal__footerButton m='primary' onClick={this.saveReportStyles}>
+            <bem.KoboButton m='blue' onClick={this.saveReportStyles}>
               {t('Save')}
-            </bem.Modal__footerButton>
+            </bem.KoboButton>
           </ui.Modal.Footer>
         </ui.Modal.Body>
       </bem.GraphSettings>
@@ -754,7 +708,7 @@ class Reports extends React.Component {
     }
   }
   loadReportData() {
-    let uid = this.props.params.assetid;
+    const uid = this.props.params.assetid || this.props.params.uid;
 
     stores.allAssets.whenLoaded(uid, (asset)=>{
       let rowsByKuid = {};
@@ -775,7 +729,7 @@ class Reports extends React.Component {
 
       // TODO: improve the defaults below
       if (reportStyles.default.report_type === undefined) {
-        reportStyles.default.report_type = 'vertical';
+        reportStyles.default.report_type = REPORT_STYLES.vertical.value;
       }
       if (reportStyles.default.translationIndex === undefined) {
         reportStyles.default.translationIndex = 0;
@@ -844,7 +798,7 @@ class Reports extends React.Component {
     });
   }
   refreshReportData() {
-    let uid = this.props.params.assetid,
+    let uid = this.props.params.assetid || this.props.params.uid,
         rowsByIdentifier = this.state.rowsByIdentifier,
         customReport = this.state.currentCustomReport;
 
@@ -1015,33 +969,33 @@ class Reports extends React.Component {
         </ui.PopoverMenu>
 
         {this.state.currentCustomReport &&
-          <button className='mdl-button mdl-button--icon report-button__edit'
+          <bem.Button m='icon' className='report-button__edit'
                 onClick={this.editCustomReport}
                 data-tip={t('Edit Report Questions')}>
             <i className='k-icon-edit' />
-          </button>
+          </bem.Button>
         }
 
-        <button
-          className='mdl-button mdl-button--icon report-button__expand right-tooltip'
+        <bem.Button
+          m='icon' className='report-button__expand right-tooltip'
           onClick={this.toggleFullscreen}
           data-tip={t('Toggle fullscreen')}
         >
           <i className='k-icon-expand' />
-        </button>
+        </bem.Button>
 
-        <button className='mdl-button mdl-button--icon report-button__print'
+        <bem.Button m='icon' className='report-button__print'
                 onClick={launchPrinting}
                 data-tip={t('Print')}>
           <i className='k-icon-print' />
-        </button>
+        </bem.Button>
 
         {this.userCan('change_asset', this.state.asset) &&
-          <button className='mdl-button mdl-button--icon report-button__settings'
+          <bem.Button m='icon' className='report-button__settings'
                   onClick={this.toggleReportGraphSettings}
                   data-tip={t('Configure Report Style')}>
             <i className='k-icon-settings' />
-          </button>
+          </bem.Button>
         }
       </bem.FormView__reportButtons>
     );
@@ -1143,6 +1097,7 @@ class Reports extends React.Component {
         </bem.Loading>
       );
     }
+    
     const formViewModifiers = [];
     if (this.state.isFullscreen) {
       formViewModifiers.push('fullscreen');
@@ -1179,16 +1134,16 @@ class Reports extends React.Component {
                     <div>
                       {t('For performance reasons, this report only includes the first ## questions.').replace('##', this.state.reportLimit)}
                     </div>
-                    <button className='mdl-button mdl-button--colored' onClick={this.resetReportLimit}>
+                    <bem.Button m='colored' onClick={this.resetReportLimit}>
                       {t('Show all (##)').replace('##', this.state.reportData.length)}
-                    </button>
+                    </bem.Button>
                   </bem.FormView__cell>
                 }
 
-                <bem.ReportView__warning>
-                  <h4>{t('Warning')}</h4>
+                <bem.FormView__cell m='warning'>
+                  <i className='k-icon-alert' />
                   <p>{t('This is an automated report based on raw data submitted to this project. Please conduct proper data cleaning prior to using the graphs and figures used on this page. ')}</p>
-                </bem.ReportView__warning>
+                </bem.FormView__cell>
 
                 <ReportContents parentState={this.state} reportData={reportData} triggerQuestionSettings={this.triggerQuestionSettings} />
               </bem.ReportView__wrap>

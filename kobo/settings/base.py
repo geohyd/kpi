@@ -54,7 +54,7 @@ if os.environ.get('SESSION_COOKIE_DOMAIN'):
 SESSION_COOKIE_AGE = 604800
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = (os.environ.get('DJANGO_DEBUG', 'True') == 'True')
+DEBUG = (os.environ.get('DJANGO_DEBUG', 'False') == 'True')
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(' ')
 
@@ -74,7 +74,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'reversion',
-    'mptt',
     'private_storage',
     'kobo.apps.KpiConfig',
     'hub',
@@ -125,36 +124,55 @@ if os.environ.get('DEFAULT_FROM_EMAIL'):
 # must use `constance.config.THE_SETTING` instead of
 # `django.conf.settings.THE_SETTING`
 CONSTANCE_CONFIG = {
-    'REGISTRATION_OPEN': (True, 'Allow new users to register accounts for '
-                                'themselves'),
-    'TERMS_OF_SERVICE_URL': ('http://www.kobotoolbox.org/terms',
-                             'URL for terms of service document'),
-    'PRIVACY_POLICY_URL': ('http://www.kobotoolbox.org/privacy',
-                           'URL for privacy policy'),
-    'SOURCE_CODE_URL': ('https://github.com/kobotoolbox/',
-                        'URL of source code repository. When empty, a link '
-                        'will not be shown in the user interface'),
-    'SUPPORT_URL': (os.environ.get('KOBO_SUPPORT_URL',
-                                   'http://help.kobotoolbox.org/'),
-                    'URL of user support portal. When empty, a link will not '
-                    'be shown in the user interface'),
-    'SUPPORT_EMAIL': (os.environ.get('KOBO_SUPPORT_EMAIL') or
-                      os.environ.get('DEFAULT_FROM_EMAIL',
-                                     'help@kobotoolbox.org'),
-                      'Email address for users to contact, e.g. when they '
-                      'encounter unhandled errors in the application'),
-    'ALLOW_UNSECURED_HOOK_ENDPOINTS': (True,
-                                       'Allow the use of unsecured endpoints for hooks. '
-                                       '(e.g http://hook.example.com)'),
-    'HOOK_MAX_RETRIES': (3,
-                         'Number of times the system will retry '
-                         'to send data to remote server before giving up'),
-
-    'SSRF_ALLOWED_IP_ADDRESS': ('', 'Whitelisted IP addresses to '
-                                    'bypass SSRF protection\nOne per line'),
-
-    'SSRF_DENIED_IP_ADDRESS': ('', 'Blacklisted IP addresses to '
-                                   'bypass SSRF protection\nOne per line')
+    'REGISTRATION_OPEN': (
+        True,
+        'Allow new users to register accounts for themselves',
+    ),
+    'TERMS_OF_SERVICE_URL': ('', 'URL for terms of service document'),
+    'PRIVACY_POLICY_URL': ('', 'URL for privacy policy'),
+    'SOURCE_CODE_URL': (
+        'https://github.com/kobotoolbox/',
+        'URL of source code repository. When empty, a link will not be shown '
+        'in the user interface',
+    ),
+    'SUPPORT_EMAIL': (
+        os.environ.get('KOBO_SUPPORT_EMAIL')
+        or os.environ.get('DEFAULT_FROM_EMAIL', 'help@kobotoolbox.org'),
+        'Email address for users to contact, e.g. when they encounter '
+        'unhandled errors in the application',
+    ),
+    'SUPPORT_URL': (
+        os.environ.get('KOBO_SUPPORT_URL', 'https://support.kobotoolbox.org/'),
+        'URL for "KoBoToolbox Help Center"',
+    ),
+    'COMMUNITY_URL': (
+        os.environ.get(
+            'KOBO_COMMUNITY_URL', 'https://community.kobotoolbox.org/'
+        ),
+        'URL for "KoBoToolbox Community Forum"',
+    ),
+    'ALLOW_UNSECURED_HOOK_ENDPOINTS': (
+        True,
+        'Allow the use of unsecured endpoints for hooks. '
+        '(e.g http://hook.example.com)',
+    ),
+    'HOOK_MAX_RETRIES': (
+        3,
+        'Number of times the system will retry to send data to remote server '
+        'before giving up',
+    ),
+    'SSRF_ALLOWED_IP_ADDRESS': (
+        '',
+        'Whitelisted IP addresses to bypass SSRF protection\nOne per line',
+    ),
+    'SSRF_DENIED_IP_ADDRESS': (
+        '',
+        'Blacklisted IP addresses to bypass SSRF protection\nOne per line',
+    ),
+    'EXPOSE_GIT_REV': (
+        False,
+        'Display information about the running commit to non-superusers',
+    ),
 }
 # Tell django-constance to use a database model instead of Redis
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
@@ -190,8 +208,8 @@ WSGI_APPLICATION = 'kobo.wsgi.application'
 ANONYMOUS_USER_ID = -1
 # Permissions assigned to AnonymousUser are restricted to the following
 ALLOWED_ANONYMOUS_PERMISSIONS = (
-    'kpi.view_collection',
     'kpi.view_asset',
+    'kpi.discover_asset',
     'kpi.view_submissions',
 )
 
@@ -222,9 +240,9 @@ LANGUAGES = [
             'DJANGO_LANGUAGE_CODES', 'en').split(' ')
 ]
 
-LANGUAGE_CODE = 'fr-fr'
+LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Paris'
+TIME_ZONE = 'UTC'
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale'),)
 
@@ -262,6 +280,13 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/' + os.environ.get('KPI_MEDIA_URL', 'media').strip('/') + '/'
 
+# `PUBLIC_MEDIA_PATH` sets the `upload_to` attribute of explicitly-public
+# `FileField`s, e.g. in `ConfigurationFile`. The corresponding location on the
+# file system (usually `MEDIA_ROOT + PUBLIC_MEDIA_PATH`) should be exposed to
+# everyone via NGINX. For more information, see
+# https://docs.djangoproject.com/en/2.2/ref/models/fields/#django.db.models.FileField.upload_to
+PUBLIC_MEDIA_PATH = '__public/'
+
 # Following the uWSGI mountpoint convention, this should have a leading slash
 # but no trailing slash
 KPI_PREFIX = os.environ.get('KPI_PREFIX', 'False')
@@ -281,6 +306,7 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'jsapp'),
     os.path.join(BASE_DIR, 'static'),
     ('mocha', os.path.join(BASE_DIR, 'node_modules', 'mocha'),),
+    ('chai', os.path.join(BASE_DIR, 'node_modules', 'chai'),),
 )
 
 if os.path.exists(os.path.join(BASE_DIR, 'dkobo', 'jsapp')):
@@ -330,7 +356,7 @@ TEMPLATES = [
                 'kpi.context_processors.sitewide_messages',
                 'kpi.context_processors.config',
             ],
-            'debug': os.environ.get('TEMPLATE_DEBUG', 'True') == 'True',
+            'debug': os.environ.get('TEMPLATE_DEBUG', 'False') == 'True',
         },
     },
 ]
@@ -435,18 +461,18 @@ if 'KOBOCAT_URL' in os.environ:
         }
 
 CELERY_BROKER_URL = os.environ.get('KPI_BROKER_URL', 'redis://localhost:6379/1')
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 
 ''' Django Registration configuration '''
 # http://django-registration-redux.readthedocs.org/en/latest/quickstart.html#settings
-ACCOUNT_ACTIVATION_DAYS = 15
+ACCOUNT_ACTIVATION_DAYS = 3
 REGISTRATION_AUTO_LOGIN = True
 REGISTRATION_EMAIL_HTML = False  # Otherwise we have to write HTML templates
 
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'jsapp/compiled/',
-        'STATS_FILE': "/srv/kobo/kpi/webpack-stats.json",
         'POLL_INTERVAL': 0.5,
         'TIMEOUT': 5,
     }
@@ -629,9 +655,6 @@ for git_rev_key, git_command in (
         GIT_REV[git_rev_key] = False
 if GIT_REV['branch'] == 'HEAD':
     GIT_REV['branch'] = False
-# Only superusers will be able to see this information unless
-# EXPOSE_GIT_REV=TRUE is set in the environment
-EXPOSE_GIT_REV = os.environ.get('EXPOSE_GIT_REV', '').upper() == 'TRUE'
 
 
 '''
@@ -646,9 +669,6 @@ KOBOCAT_DEFAULT_PERMISSION_CONTENT_TYPES = [
     # Each tuple must be (app_label, model_name)
     ('main', 'userprofile'),
     ('logger', 'xform'),
-    ('api', 'project'),
-    ('api', 'team'),
-    ('api', 'organizationprofile'),
     ('logger', 'note'),
 ]
 
@@ -682,6 +702,8 @@ MONGO_DB = MONGO_CONNECTION[MONGO_DATABASE['NAME']]
 
 SESSION_ENGINE = "redis_sessions.session"
 SESSION_REDIS = RedisHelper.config(default="redis://redis_cache:6380/2")
+
+ENV = None
 
 # The maximum size in bytes that a request body may be before a SuspiciousOperation (RequestDataTooBig) is raised
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760

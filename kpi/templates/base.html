@@ -6,6 +6,7 @@
 <head>
     {% load static %}
     {% load render_bundle from webpack_loader %}
+    {% include "global_t.html" %}
     {% render_bundle 'app' 'css' %}
     {% render_bundle 'app' 'js' %}
     {% render_bundle 'vendors' 'js' %}
@@ -15,7 +16,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>Survea {% block title %}{% endblock %}</title>
-<meta name="description" content="Survea is a free toolkit collecting and managing data">
+<meta name="description" content="Survea is a free toolkit for collecting and managing data">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}" />
 <!-- iPhone + iPad icons -->
@@ -35,7 +36,7 @@
 {% load i18n %}
 {% block foot %}
   <div class="registration__footer">
-    <!--<div class="registration__legal">
+    <!--ANTEA COMMENT <div class="registration__legal">
       {% if config.TERMS_OF_SERVICE_URL %}
       <a href="{{config.TERMS_OF_SERVICE_URL}}" target="_blank">{% trans "Terms and Conditions" %}</a>
       {% endif %}
@@ -49,6 +50,8 @@
   </div>
 {% endblock %}
 </div>
+
+{% include "global_t.html" %}
 
 {% if google_analytics_token %}
 <script>

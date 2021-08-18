@@ -11,23 +11,22 @@ import ui from '../ui';
 import classNames from 'classnames';
 import omnivore from '@mapbox/leaflet-omnivore';
 import JSZip from 'jszip';
-// antea - Geo-hyd start
-import $ from 'jquery';
-import _ from 'lodash';
-// antea - Geo-hyd end
 import L from 'leaflet/dist/leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat/dist/leaflet-heat';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 
-import {MODAL_TYPES, QUESTION_TYPES} from '../constants';
+import {
+  MODAL_TYPES,
+  QUESTION_TYPES,
+  QUERY_LIMIT_DEFAULT,
+} from '../constants';
 
 import {
-  t,
   notify,
   checkLatLng
-} from '../utils';
+} from 'utils';
 import {getSurveyFlatPaths} from 'js/assetUtils';
 
 import MapSettings from './mapSettings';
@@ -64,7 +63,7 @@ export class FormMap extends React.Component {
     let survey = props.asset.content.survey;
     var hasGeoPoint = false;
     survey.forEach(function(s) {
-      if (s.type === QUESTION_TYPES.get('geopoint').id) {
+      if (s.type === QUESTION_TYPES.geopoint.id) {
         hasGeoPoint = true;
       }
     });
@@ -78,10 +77,6 @@ export class FormMap extends React.Component {
       fields: [],
       hasGeoPoint: hasGeoPoint,
       submissions: [],
-      // antea - Geo-hyd start
-      layerpoints: {},
-      layersactive: false,
-      // antea - Geo-hyd end
       error: false,
       isFullscreen: false,
       showExpandedLegend: true,
@@ -118,14 +113,14 @@ export class FormMap extends React.Component {
       iconSize: [12, 12]
     });
 
-    // antea - Geo-hyd start
+    // ANTEA START
     var map = L.map('data-map', {
       maxZoom: 17,
       scrollWheelZoom: true,
       preferCanvas: true
     });
     this.state.map = map;
-    // antea - Geo-hyd start
+    // ANTEA END
 
     streets.addTo(map);
     controls.addTo(map);
@@ -256,18 +251,25 @@ export class FormMap extends React.Component {
     // TODO: support area / line geodata questions
     let selectedQuestion = this.props.asset.map_styles.selectedQuestion || null;
 
+    this.props.asset.content.survey.forEach(function(row) {
+      if (
+        typeof row.label !== 'undefined' &&
+        row.label !== null &&
+        selectedQuestion === row.label[0] &&
+        row.type !== QUESTION_TYPES.geopoint.id
+      ) {
+        selectedQuestion = null; //Ignore if not a geopoint question type
+      }
+    });
+
     let queryLimit = QUERY_LIMIT_DEFAULT;
     if (this.state.overridenStyles && this.state.overridenStyles.querylimit) {
       queryLimit = this.state.overridenStyles.querylimit;
     } else if (this.props.asset.map_styles.querylimit) {
       queryLimit = this.props.asset.map_styles.querylimit;
     }
-	
-	// antea - Geo-hyd start
-    //var fq = ['_id', '_geolocation'];
-	var fq = [];
-	// antea - Geo-hyd end
-	
+
+    var fq = ['_id', '_geolocation'];
     if (selectedQuestion) fq.push(selectedQuestion);
     if (nextViewBy) fq.push(this.nameOfFieldInGroup(nextViewBy));
     const sort = [{id: '_id', desc: true}];
@@ -395,51 +397,7 @@ export class FormMap extends React.Component {
         }
 
         prepPoints.push(L.marker(item._geolocation, markerProps));
-      }
-	  // antea - Geo-hyd start
-	 
-	  Object.keys(item).forEach(function (e) {
-          if (typeof item[e] === 'string') {
-			  let x_string = item[e].split(';');
-			  if (x_string.length > 1) {
-				let points = [];
-				for (let point of x_string) {
-					let point_string = point.split(' ');
-					if (point_string.length > 1) {
-						let y_float = parseFloat(point_string[0]);
-						let x_float = parseFloat(point_string[1]);
-						if (Number.isNaN(x_float) || Number.isNaN(y_float)) {
-							// console.log('Malformed coordinates : ' + submission[e]);
-						  return;
-						}
-						points.push([y_float, x_float]);
-					}
-				}
-				if (points[0][0] === _.last(points)[0] && points[0][1] === _.last(points)[1]) {
-					// console.log('polygone', points);
-				  if (!(Object.keys(_this.state.layerpoints).includes(e))){
-					  _this.state.layerpoints[e] = L.featureGroup();
-					  _this.state.layerpoints[e].on('click', _this.launchSubmissionModal);
-				  }
-				  let polygon = L.polygon(points, {sId: item._id});
-				  _this.state.layerpoints[e].addLayer(polygon);
-				} else {
-					// console.log('ligne', points);
-				  if (!(Object.keys(_this.state.layerpoints).includes(e))){
-					_this.state.layerpoints[e] = L.featureGroup();
-					  _this.state.layerpoints[e].on('click', _this.launchSubmissionModal);
-				  }
-				  let polyline = L.polyline(points, {sId: item._id});
-				  // L.path.touchHelper(polyline, {sId: submission._id}).addTo(_this.state.layerpoints[e]);
-				  _this.state.layerpoints[e].addLayer(polyline);
-				}
-			  }
-		  }
-		 
-      });
-	  // antea - Geo-hyd end
-	  
-	  
+      }	  
     });
 
     if (prepPoints.length >= 0) {
@@ -696,29 +654,6 @@ export class FormMap extends React.Component {
     return flatPaths[fieldName];
   }
 
-  // antea - Geo-hyd start
-  toggleLayerList() {
-    this.setState({
-      layersactive: !this.state.layersactive
-    }, () => this.showSubmissions());
-  }
-  showSubmissions(){
-    let self = this;
-    if(self.state.layersactive){
-      Object.keys(self.state.layerpoints).forEach(function(e){
-        if($(document.getElementById(e)).prop('checked'))
-          self.state.map.addLayer(self.state.layerpoints[e]);
-      });
-      document.getElementsByClassName('divlayers')[0].style.display = '';
-    } else{
-		Object.keys(self.state.layerpoints).forEach(function(e){
-        self.state.map.removeLayer(self.state.layerpoints[e]);
-      });
-      document.getElementsByClassName('divlayers')[0].style.display = 'none';
-    }
-  }
-  // antea - Geo-hyd end
-
   render () {
     if (this.state.error) {
       return (
@@ -756,38 +691,6 @@ export class FormMap extends React.Component {
     if (this.state.isFullscreen) {
       formViewModifiers.push('fullscreen');
     }
-// antea - Geo-hyd start
-    let self = this;
-
-    const layersstyle = {
-		bottom: '50px',
-		position: 'absolute',
-		display: 'none'
-    };
-    const buttonstyle = {
-      'margin-top': '108px'
-    };
-
-
-    const items = [];
-    Object.keys(self.state.layerpoints).forEach(function (e) {
-      items.push(<div>
-            <label>
-                <input
-                  id={e}
-                  defaultChecked='true'
-                  onChange={function () {
-                    if($(document.getElementById(e)).prop('checked'))
-                      self.state.map.addLayer(self.state.layerpoints[e]);
-                    else
-                      self.state.map.removeLayer(self.state.layerpoints[e]);
-                  }}
-                  type='checkbox'/>
-              {e}
-            </label>
-        </div>);
-    });
-// antea - Geo-hyd end
 
     return (
       <bem.FormView m={formViewModifiers} className='right-tooltip'>
@@ -814,29 +717,6 @@ export class FormMap extends React.Component {
           data-tip={t('Map display settings')}>
           <i className='k-icon-settings' />
         </bem.FormView__mapButton>
-        {/*antea - Geo-hyd start*/}
-        <bem.FormView__mapButton
-          m={'display-all-geom'}
-          style={buttonstyle}
-          onClick={this.toggleLayerList}
-          data-tip={t('Display all geometry')}>
-          <i className='k-icon-layer'/>
-        </bem.FormView__mapButton>
-        <div
-          style={layersstyle}
-          className={'divlayers'}>
-            <ui.PopoverMenu type='viewby-menu'
-                            triggerLabel={t('Layers list')}
-                            m={'above'}
-                            clearPopover={this.state.clearDisaggregatedPopover}
-                            blurEventDisabled>
-              <bem.PopoverMenu__heading>
-                {t('Layers available')}
-              </bem.PopoverMenu__heading>
-              {items}
-            </ui.PopoverMenu>
-        </div>
-        {/*antea - Geo-hyd start*/}
         {!viewby &&
           <bem.FormView__mapButton m={'heatmap'}
             onClick={this.showHeatmap}
@@ -972,4 +852,3 @@ export class FormMap extends React.Component {
 reactMixin(FormMap.prototype, Reflux.ListenerMixin);
 
 export default FormMap;
-export const QUERY_LIMIT_DEFAULT = 5000;
