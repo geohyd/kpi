@@ -10,7 +10,7 @@
     # via -r dependencies/pip/requirements.in ANTEA
 -e git+https://github.com/geohyd/formpack.git@antea_merge_2_021_12b#egg=formpack
     # via -r dependencies/pip/requirements.in
--e git+https://github.com/dimagi/python-digest#egg=python_digest
+-e git+https://github.com/dimagi/python-digest@5c94bb74516b977b60180ee832765c0695ff2b56#egg=python_digest
     # via -r dependencies/pip/requirements.in
 -e git+https://github.com/kobotoolbox/ssrf-protect@9eec6c4aa37700c6e7ca90540a9407bd20acddb0#egg=ssrf_protect
     # via -r dependencies/pip/requirements.in
@@ -217,7 +217,7 @@ pytz==2019.3
     #   celery
     #   django
     #   django-timezone-field
-pyxform==0.15.1
+pyxform==1.5.1
     # via
     #   -r dependencies/pip/requirements.in
     #   formpack
