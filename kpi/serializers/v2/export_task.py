@@ -1,4 +1,6 @@
 # coding: utf-8
+from typing import Optional
+
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from rest_framework.request import Request
@@ -9,11 +11,15 @@ from formpack.constants import (
     EXPORT_SETTING_FLATTEN,
     EXPORT_SETTING_GROUP_SEP,
     EXPORT_SETTING_HIERARCHY_IN_LABELS,
+    EXPORT_SETTING_INCLUDE_MEDIA_URL,
     EXPORT_SETTING_LANG,
     EXPORT_SETTING_MULTIPLE_SELECT,
+    EXPORT_SETTING_NAME,
+    EXPORT_SETTING_QUERY,
     EXPORT_SETTING_SOURCE,
+    EXPORT_SETTING_SUBMISSION_IDS,
     EXPORT_SETTING_TYPE,
-    OPTIONAL_EXPORT_SETTINGS,
+    EXPORT_SETTING_XLS_TYPES_AS_TEXT,
     REQUIRED_EXPORT_SETTINGS,
     VALID_DEFAULT_LANGUAGES,
     VALID_EXPORT_SETTINGS,
@@ -25,6 +31,7 @@ from kpi.fields import ReadOnlyJSONField
 from kpi.models import ExportTask, Asset
 from kpi.tasks import export_in_background
 from kpi.utils.export_task import format_exception_values
+from kpi.utils.object_permission import get_database_user
 
 
 class ExportTaskSerializer(serializers.ModelSerializer):
@@ -53,8 +60,9 @@ class ExportTaskSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: dict) -> ExportTask:
         # Create a new export task
+        user = get_database_user(self._get_request.user)
         export_task = ExportTask.objects.create(
-            user=self._get_request.user, data=validated_data
+            user=user, data=validated_data
         )
         # Have Celery run the export in the background
         export_in_background.delay(export_task_uid=export_task.uid)
@@ -75,6 +83,7 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             data_
         )
         attrs[EXPORT_SETTING_SOURCE] = self.validate_source()
+        attrs[EXPORT_SETTING_NAME] = self.validate_name(data_)
         attrs[EXPORT_SETTING_TYPE] = self.validate_type(data_)
 
         if EXPORT_SETTING_FIELDS in data_:
@@ -82,6 +91,24 @@ class ExportTaskSerializer(serializers.ModelSerializer):
 
         if EXPORT_SETTING_FLATTEN in data_:
             attrs[EXPORT_SETTING_FLATTEN] = data_[EXPORT_SETTING_FLATTEN]
+
+        if EXPORT_SETTING_QUERY in data_:
+            attrs[EXPORT_SETTING_QUERY] = self.validate_query(data_)
+
+        if EXPORT_SETTING_SUBMISSION_IDS in data_:
+            attrs[EXPORT_SETTING_SUBMISSION_IDS] = self.validate_submission_ids(
+                data_
+            )
+
+        if EXPORT_SETTING_XLS_TYPES_AS_TEXT in data_:
+            attrs[EXPORT_SETTING_XLS_TYPES_AS_TEXT] = data_[
+                EXPORT_SETTING_XLS_TYPES_AS_TEXT
+            ]
+
+        if EXPORT_SETTING_INCLUDE_MEDIA_URL in data_:
+            attrs[EXPORT_SETTING_INCLUDE_MEDIA_URL] = data_[
+                EXPORT_SETTING_INCLUDE_MEDIA_URL
+            ]
 
         return attrs
 
@@ -181,6 +208,47 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             kwargs={'uid': self._get_asset.uid},
             request=self._get_request,
         )
+
+    def validate_name(self, data: dict) -> Optional[str]:
+        name = data.get(EXPORT_SETTING_NAME)
+
+        # Allow name to be empty
+        if name is None:
+            return
+
+        if not isinstance(name, str):
+            raise serializers.ValidationError(
+                {EXPORT_SETTING_NAME: _('The export name must be a string.')}
+            )
+        return name
+
+    def validate_query(self, data: dict) -> dict:
+        query = data[EXPORT_SETTING_QUERY]
+        if not isinstance(query, dict):
+            raise serializers.ValidationError(
+                {EXPORT_SETTING_QUERY: _('Must be a JSON object')}
+            )
+        return query
+
+    def validate_submission_ids(self, data: dict) -> list:
+        submission_ids = data[EXPORT_SETTING_SUBMISSION_IDS]
+        if not isinstance(submission_ids, list):
+            raise serializers.ValidationError(
+                {EXPORT_SETTING_SUBMISSION_IDS: _('Must be an array')}
+            )
+
+        if (
+            submission_ids
+            and not all(isinstance(_id, int) for _id in submission_ids)
+        ):
+            raise serializers.ValidationError(
+                {
+                    EXPORT_SETTING_SUBMISSION_IDS: _(
+                        'All values in the array must be integers'
+                    )
+                }
+            )
+        return submission_ids
 
     def validate_type(self, data: dict) -> str:
         export_type = data[EXPORT_SETTING_TYPE]

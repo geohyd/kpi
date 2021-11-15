@@ -5,7 +5,7 @@ import autoBind from 'react-autobind';
 import reactMixin from 'react-mixin';
 import Reflux from 'reflux';
 import DocumentTitle from 'react-document-title';
-import {bem} from 'js/bem';
+import bem from 'js/bem';
 import mixins from 'js/mixins';
 import {actions} from 'js/actions';
 import assetUtils from 'js/assetUtils';
@@ -16,8 +16,7 @@ import AssetPublicButton from './assetPublicButton';
 import AssetBreadcrumbs from './assetBreadcrumbs';
 import AssetContentSummary from './assetContentSummary';
 import CollectionAssetsTable from './collectionAssetsTable';
-import {renderLoading} from 'js/components/modalForms/modalHelpers';
-import { dataInterface } from '../../dataInterface.es6';
+import LoadingSpinner from 'js/components/common/loadingSpinner';
 
 class AssetRoute extends React.Component {
   constructor(props) {
@@ -96,7 +95,7 @@ class AssetRoute extends React.Component {
 
   render() {
     if (this.state.asset === false) {
-      return renderLoading();
+      return (<LoadingSpinner/>);
     }
 
     const assetName = assetUtils.getAssetDisplayName(this.state.asset);

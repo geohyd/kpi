@@ -11,14 +11,21 @@ const postCssLoader = {
   loader: 'postcss-loader',
   options: {
     sourceMap: true,
-    config: {
-       path: path.resolve(__dirname, '../postcss.config.js')
-    },
-    plugins: [
-      require('autoprefixer')
-    ]
+    postcssOptions: {
+      plugins: [
+        'autoprefixer'
+      ]
+    }
   }
 };
+
+const babelLoader = {
+  loader: 'babel-loader',
+  options: {
+    presets: ['@babel/preset-env', '@babel/preset-react'],
+    plugins: ['react-hot-loader/babel']
+  }
+}
 
 var commonOptions = {
   module: {
@@ -33,15 +40,40 @@ var commonOptions = {
         }
       },
       {
+        enforce: 'pre',
+        test: /\.coffee$/,
+        exclude: /node_modules/,
+        loader: 'less-terrible-coffeelint-loader',
+        options: {
+          failOnErrors: true,
+          failOnWarns: false,
+          // custom reporter function that only returns errors (no warnings)
+          reporter: function(errors) {
+            errors.forEach((error) => {
+              if (error.level === 'error') {
+                this.emitError([
+                  error.lineNumber,
+                  error.message,
+                ].join(' ') + '\n');
+              }
+            });
+          },
+        },
+      },
+      {
         test: /\.(js|jsx|es6)$/,
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env', '@babel/preset-react'],
-            plugins: ['react-hot-loader/babel']
+        use: babelLoader
+      },
+      {
+        test: /\.(ts|tsx)$/,
+        exclude: /node_modules/,
+        use: [
+          babelLoader,
+          {
+            loader: 'ts-loader'
           }
-        }
+        ]
       },
       {
         test: /\.css$/,
@@ -69,10 +101,12 @@ var commonOptions = {
     ]
   },
   resolve: {
-    extensions: ['.jsx', '.js', '.es6', '.coffee'],
+    extensions: ['.jsx', '.js', '.es6', '.coffee', '.ts', '.tsx'],
     alias: {
       app: path.join(__dirname, '../app'),
+      jsapp: path.join(__dirname, '../jsapp'),
       js: path.join(__dirname, '../jsapp/js'),
+      scss: path.join(__dirname, '../jsapp/scss'),
       utils: path.join(__dirname, '../jsapp/js/utils'),
       test: path.join(__dirname, '../test'),
     }

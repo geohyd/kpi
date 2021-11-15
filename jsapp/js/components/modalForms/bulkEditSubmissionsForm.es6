@@ -5,22 +5,17 @@ import Fuse from 'fuse.js';
 import {
   getSurveyFlatPaths,
   getFlatQuestionsList,
+  renderQuestionTypeIcon,
 } from 'js/assetUtils';
-import {QUESTION_TYPES} from 'js/constants';
-import {bem} from 'js/bem';
+import {
+  QUESTION_TYPES,
+  FUSE_OPTIONS,
+} from 'js/constants';
+import bem from 'js/bem';
 import {actions} from 'js/actions';
 import TextBox from 'js/components/common/textBox';
-import {stores} from 'js/stores';
-
-const FUSE_OPTIONS = {
-  isCaseSensitive: false,
-  includeScore: true,
-  minMatchCharLength: 1,
-  shouldSort: false,
-  ignoreFieldNorm: true,
-  threshold: 0.2,
-  ignoreLocation: true,
-};
+import envStore from 'js/envStore';
+import './bulkEditSubmissionsForm.scss';
 
 // we need a text to display when we need to say "this question has no answer"
 const EMPTY_VALUE_LABEL = t('n/d');
@@ -203,10 +198,10 @@ class BulkEditSubmissionsForm extends React.Component {
   }
 
   renderSupportUrlLink() {
-    if (stores.serverEnvironment?.state?.support_url) {
+    if (envStore.isReady && envStore.data.support_url) {
       return (
         <a
-          href={stores.serverEnvironment.state.support_url + HELP_ARTICLE_URL}
+          href={envStore.data.support_url + HELP_ARTICLE_URL}
           target='_blank'
         >
           {t('in the help article')}
@@ -230,12 +225,10 @@ class BulkEditSubmissionsForm extends React.Component {
       modifiers.push('bulk-edit-row-disabled');
     }
 
-    const typeDef = QUESTION_TYPES[question.type];
     return (
       <bem.SimpleTable__row key={itemIndex} m={modifiers}>
         <bem.SimpleTable__cell>
-          {/* TODO fix icon for date time */}
-          <i title={typeDef.label} className={['fa', typeDef.faIcon].join(' ')}/>
+          {renderQuestionTypeIcon(question.type)}
         </bem.SimpleTable__cell>
 
         <bem.SimpleTable__cell>
@@ -548,14 +541,11 @@ class BulkEditRowForm extends React.Component {
       inputValue = this.props.overrideData;
     }
 
-    const typeDef = QUESTION_TYPES[this.props.question.type];
-
     return (
       <React.Fragment>
         <bem.FormView__cell m={['columns', 'columns-top']}>
           <bem.FormView__cell m='column-icon'>
-            {/* TODO fix icon for date time */}
-            <i title={typeDef.label} className={['fa', typeDef.faIcon].join(' ')}/>
+            {renderQuestionTypeIcon(this.props.question.type)}
           </bem.FormView__cell>
 
           <bem.FormView__cell m='column-1'>
