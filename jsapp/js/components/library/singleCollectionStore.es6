@@ -2,15 +2,16 @@ import Reflux from 'reflux';
 import {hashHistory} from 'react-router';
 import assetUtils from 'js/assetUtils';
 import {
-  isOnLibraryAssetRoute,
-  getCurrentLibraryAssetUID,
-} from './libraryUtils';
+  getCurrentPath,
+  getRouteAssetUid,
+  isAnyLibraryItemRoute,
+} from 'js/router/routerUtils';
 import {actions} from 'js/actions';
 import {
   ORDER_DIRECTIONS,
   ASSETS_TABLE_COLUMNS,
 } from './libraryConstants';
-import {ROUTES} from 'js/constants';
+import {ROUTES} from 'js/router/routerConstants';
 
 // A store that listens for actions on assets from a single collection
 // Extends most functionality from myLibraryStore but overwrites some actions:
@@ -22,7 +23,7 @@ const singleCollectionStore = Reflux.createStore({
    * It doesn't need to be defined upfront, but I'm adding it here for clarity.
    */
   abortFetchData: undefined,
-  previousPath: hashHistory.getCurrentLocation().pathname,
+  previousPath: getCurrentPath(),
   PAGE_SIZE: 100,
   DEFAULT_ORDER_COLUMN: ASSETS_TABLE_COLUMNS['date-modified'],
 
@@ -65,7 +66,7 @@ const singleCollectionStore = Reflux.createStore({
    * otherwise wait until route changes to a library (see `onRouteChange`)
    */
   startupStore() {
-    if (!this.isInitialised && isOnLibraryAssetRoute() && !this.data.isFetchingData) {
+    if (!this.isInitialised && isAnyLibraryItemRoute() && !this.data.isFetchingData) {
       this.fetchData(true);
     }
   },
@@ -86,7 +87,7 @@ const singleCollectionStore = Reflux.createStore({
     const params = {
       pageSize: this.PAGE_SIZE,
       page: this.data.currentPage,
-      uid: getCurrentLibraryAssetUID(),
+      uid: getRouteAssetUid(),
     };
 
     if (this.data.filterColumnId !== null) {
@@ -108,8 +109,8 @@ const singleCollectionStore = Reflux.createStore({
   fetchData(needsMetadata = false) {
     // Avoid triggering search if not on the collection route (e.g. subscribed
     // to a collection from Public Collections list) as it will cause 500 error
-    // caused by getCurrentLibraryAssetUID being `undefined` (rightfuly so)
-    if (!isOnLibraryAssetRoute()) {
+    // caused by getRouteAssetUid being `undefined` (rightfuly so)
+    if (!isAnyLibraryItemRoute()) {
       return;
     }
 
@@ -134,7 +135,7 @@ const singleCollectionStore = Reflux.createStore({
   },
 
   onRouteChange(data) {
-    if (!this.isInitialised && isOnLibraryAssetRoute() && !this.data.isFetchingData) {
+    if (!this.isInitialised && isAnyLibraryItemRoute() && !this.data.isFetchingData) {
       this.fetchData(true);
     } else if (
       (
@@ -144,7 +145,7 @@ const singleCollectionStore = Reflux.createStore({
         // actually outside of it
         this.previousPath.startsWith(ROUTES.PUBLIC_COLLECTIONS)
       ) &&
-      isOnLibraryAssetRoute()
+      isAnyLibraryItemRoute()
     ) {
       // refresh data when navigating into library from other place
       this.setDefaultColumns();

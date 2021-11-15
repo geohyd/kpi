@@ -1,11 +1,11 @@
 import React from 'react';
 import autoBind from 'react-autobind';
-import {bem} from 'js/bem';
+import bem from 'js/bem';
 import {
   isSelfOwned,
-  getAssetDisplayName
+  getAssetDisplayName,
 } from 'js/assetUtils';
-import {isOnLibraryRoute} from './libraryUtils';
+import {isAnyLibraryRoute} from 'js/router/routerUtils';
 import myLibraryStore from './myLibraryStore';
 import publicCollectionsStore from './publicCollectionsStore';
 import {ROOT_BREADCRUMBS} from './libraryConstants';
@@ -13,6 +13,7 @@ import {
   ACCESS_TYPES,
   ASSET_TYPES,
 } from 'js/constants';
+import './assetBreadcrumbs.scss';
 
 /**
  * @prop asset
@@ -27,13 +28,13 @@ class AssetBreadcrumbs extends React.Component {
     const parentAssetData = this.getParentAssetData();
 
     if (
-      isOnLibraryRoute() &&
+      isAnyLibraryRoute() &&
       isSelfOwned(this.props.asset)
     ) {
       // case for self owned asset
       return ROOT_BREADCRUMBS.MY_LIBRARY;
     } else if (
-      isOnLibraryRoute() &&
+      isAnyLibraryRoute() &&
       this.props.asset &&
       this.props.asset.asset_type === ASSET_TYPES.collection.id &&
       this.props.asset.access_types !== null &&
@@ -44,7 +45,7 @@ class AssetBreadcrumbs extends React.Component {
       // case for a collection that is public
       return ROOT_BREADCRUMBS.PUBLIC_COLLECTIONS;
     } else if (
-      isOnLibraryRoute() &&
+      isAnyLibraryRoute() &&
       this.props.asset &&
       this.props.asset.asset_type !== ASSET_TYPES.collection.id &&
       parentAssetData &&
@@ -55,7 +56,7 @@ class AssetBreadcrumbs extends React.Component {
     ) {
       // case for an asset that has parent collection that is public
       return ROOT_BREADCRUMBS.PUBLIC_COLLECTIONS;
-    } else if (isOnLibraryRoute()) {
+    } else if (isAnyLibraryRoute()) {
       // all the other library assets
       return ROOT_BREADCRUMBS.MY_LIBRARY;
     } else {
@@ -117,14 +118,14 @@ class AssetBreadcrumbs extends React.Component {
         <bem.Breadcrumbs__crumb href={rootBreadcrumb.href}>
           {rootBreadcrumb.label}
         </bem.Breadcrumbs__crumb>
-        <bem.Breadcrumbs__divider/>
+        <i className='k-icon k-icon-next'/>
 
         {this.props.asset.parent !== null &&
           <React.Fragment>
           <bem.Breadcrumbs__crumb href={this.getParentHref()}>
             {this.getParentName()}
           </bem.Breadcrumbs__crumb>
-          <bem.Breadcrumbs__divider/>
+          <i className='k-icon k-icon-next'/>
           </React.Fragment>
         }
 

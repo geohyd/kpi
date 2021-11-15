@@ -5,8 +5,10 @@ import Reflux from 'reflux';
 import alertify from 'alertifyjs';
 import {stores} from '../../stores';
 import {actions} from '../../actions';
-import {bem} from '../../bem';
+import bem from 'js/bem';
+import LoadingSpinner from 'js/components/common/loadingSpinner';
 import {MODAL_TYPES} from '../../constants';
+import envStore from 'js/envStore';
 
 const REST_SERVICES_SUPPORT_URL = 'https://support.anteagroup.fr/';
 
@@ -94,8 +96,8 @@ export default class RESTServicesList extends React.Component {
   }
 
   getSupportUrl() {
-    if (stores.serverEnvironment && stores.serverEnvironment.state.support_url) {
-      return stores.serverEnvironment.state.support_url + REST_SERVICES_SUPPORT_URL;
+    if (envStore.isReady && envStore.data.support_url) {
+      return envStore.data.support_url + REST_SERVICES_SUPPORT_URL;
     }
   }
 
@@ -114,7 +116,7 @@ export default class RESTServicesList extends React.Component {
     return (
       <bem.FormView m={'form-settings'} className='rest-services rest-services--empty'>
         <bem.EmptyContent>
-          <bem.EmptyContent__icon className='k-icon-data-sync' />
+          <bem.EmptyContent__icon className='k-icon k-icon-data-sync' />
 
           <bem.EmptyContent__title>
             {t("This project doesn't have any REST Services yet!")}
@@ -180,7 +182,7 @@ export default class RESTServicesList extends React.Component {
                       data-hook-uid={hook.uid}
                       data-tip={t('Edit')}
                     >
-                      <i className='k-icon-edit' />
+                      <i className='k-icon k-icon-edit' />
                     </bem.ServiceRow__actionButton>
 
                     <bem.ServiceRow__actionButton
@@ -189,7 +191,7 @@ export default class RESTServicesList extends React.Component {
                       data-hook-uid={hook.uid}
                       data-tip={t('Delete')}
                     >
-                      <i className='k-icon-trash' />
+                      <i className='k-icon k-icon-trash' />
                     </bem.ServiceRow__actionButton>
                   </bem.ServiceRow__column>
                 </bem.ServiceRow>
@@ -205,14 +207,7 @@ export default class RESTServicesList extends React.Component {
 
   render() {
     if (this.state.isLoadingHooks) {
-      return (
-        <bem.Loading>
-          <bem.Loading__inner>
-            <i />
-            {t('loading...')}
-          </bem.Loading__inner>
-        </bem.Loading>
-      )
+      return (<LoadingSpinner/>);
     } else if (this.state.hooks.length === 0) {
       return this.renderEmptyView();
     } else {

@@ -1,5 +1,3 @@
-$mdl-layout-width: 1440px;
-
 .kpiapp,
 .mdl-wrapper,
 .mdl-layout {
@@ -47,7 +45,7 @@ $mdl-layout-width: 1440px;
   flex-direction: column;
 
   > .asset-view__content,
-  > .formBuilder {
+  > .form-builder {
     @extend .mdl-cell, .mdl-cell--12-col;
 
     flex-flow: column;
@@ -58,7 +56,7 @@ $mdl-layout-width: 1440px;
     height: 100%;
   }
 
-  > .formBuilder {
+  > .form-builder {
     height: 100%;
   }
 }
@@ -87,67 +85,6 @@ $mdl-layout-width: 1440px;
   opacity: .75;
 }
 
-.message--error {
-  text-decoration: uppercase;
-}
-
-.message--loading {
-  text-align: center;
-
-  > i:first-child {
-    @extend .fa, .fa-fw, .fa-circle-o-notch, .k-spin;
-  }
-}
-
-// Loading messages
-.loading {
-  display: table;
-  vertical-align: middle;
-  height: 100%;
-  width: 100%;
-  font-size: 18px;
-  opacity: 0.8;
-
-  i:first-child {
-    @extend .fa, .k-spin, .fa-circle-o-notch;
-
-    margin-right: 12px;
-    vertical-align: middle;
-    font-size: 24px;
-  }
-
-  &__inner {
-    display: table-cell;
-    vertical-align: middle;
-    text-align: center;
-    padding-left: 20px;
-    padding-right: 20px;
-    overflow: hidden; // avoids spinner icon overflowing scrollable areas
-
-    code {
-      margin: 20px;
-      padding: 15px;
-      font-size: 13px;
-      display: block;
-      background: $kobo-white;
-      width: 80%;
-      max-height: 300px;
-      overflow: auto;
-      word-wrap: break-word;
-      text-align: left;
-    }
-
-    .pro-tip {
-      font-size: 14px;
-      margin-top: 30px;
-    }
-  }
-
-  &__msg {
-    padding-top: 10px;
-  }
-}
-
 // Popover menu
 .popover-menu {
   position: relative;
@@ -161,7 +98,7 @@ $mdl-layout-width: 1440px;
   margin: 0;
   padding: 0;
   cursor: pointer;
-  color: $kobo-darkgray;
+  color: $kobo-gray-40;
   display: inline-block;
   vertical-align: middle;
 
@@ -170,8 +107,8 @@ $mdl-layout-width: 1440px;
   }
 
   i {
-    margin: 0px;
-    font-size: 36px;
+    margin: 3px;
+    font-size: 26px;
   }
 }
 
@@ -222,17 +159,17 @@ $mdl-layout-width: 1440px;
 .popover-menu__item {
   background-color: $kobo-white;
   display: block;
-  padding: 6px 16px 6px 10px;
+  padding: 6px 12px 6px 6px;
   position: relative;
-  color: $kobo-darkgray;
+  color: $kobo-gray-40;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 
   > i:first-child {
-    margin-right: 4px;
-    font-size: 32px;
+    margin-right: 5px;
+    font-size: 28px;
     width: 28px;
     vertical-align: middle;
   }
@@ -242,8 +179,8 @@ $mdl-layout-width: 1440px;
   }
 
   &:hover {
-    background-color: $kobo-whitegray;
-    color: $kobo-black;
+    background-color: $kobo-gray-96;
+    color: $kobo-gray-24;
   }
 
   &.active {
@@ -251,14 +188,16 @@ $mdl-layout-width: 1440px;
   }
 
   &.divider {
-    border-top: 1px solid $kobo-lightgray;
+    border-top: 1px solid $kobo-gray-92;
   }
 }
 
 @media screen and (max-height: 475px) {
   .popover-menu__link,
   .popover-menu__item {
-    padding: 3px 8px 3px 5px;
+    i.k-icon:first-child {
+      font-size: 22px;
+    }
   }
 }
 
@@ -266,12 +205,12 @@ $mdl-layout-width: 1440px;
   max-height: 120px;
   overflow: auto;
   overflow-x: hidden;
-  background-color: $kobo-whitegray;
-  border-bottom: 1px solid $kobo-lightgray;
+  background-color: $kobo-gray-96;
+  border-bottom: 1px solid $kobo-gray-92;
 }
 
 .popover-menu__item--move-coll-item {
-  background-color: $kobo-whitegray;
+  background-color: $kobo-gray-96;
   position: relative;
   text-align: left;
   padding: 3px 8px 3px 5px;
@@ -287,15 +226,15 @@ $mdl-layout-width: 1440px;
   &.popover-menu__item--move-coll-item-parent {
     pointer-events: none;
     font-weight: 700;
-    color: $kobo-black;
+    color: $kobo-gray-24;
   }
 }
 
 .popover-menu__heading {
   padding: 8px 15px;
-  color: $kobo-darkgray;
-  border-top: 1px solid $kobo-lightgray;
-  background-color: $kobo-whitegray;
+  color: $kobo-gray-40;
+  border-top: 1px solid $kobo-gray-92;
+  background-color: $kobo-gray-96;
   margin: 0px;
 }
 
@@ -336,10 +275,7 @@ $mdl-layout-width: 1440px;
 }
 
 .popover-menu--bulkUpdate-menu {
-  vertical-align: top;
-
   .popover-menu__toggle {
-    vertical-align: inherit;
     color: $kobo-blue;
 
     &:hover {
@@ -347,30 +283,16 @@ $mdl-layout-width: 1440px;
     }
 
     &::after {
-      content: "\F107";
-      font-family: "FontAwesome";
+      content: "\25BC";
+      font-size: 8px;
       margin-left: 3px;
+      display: inline-block;
+      vertical-align: 1px;
     }
   }
 
   .popover-menu__content {
     line-height: 20px;
-  }
-}
-
-.popover-menu--question-language {
-  .popover-menu__toggle {
-    @extend .mdl-button;
-
-    text-transform: uppercase;
-    padding-left: 0px;
-
-    &::after {
-      content: "\f107";
-      font-family: "FontAwesome";
-      font-size: 18px;
-      margin-left: 5px;
-    }
   }
 }
 
@@ -382,10 +304,11 @@ $mdl-layout-width: 1440px;
     padding-left: 0px;
 
     &::after {
-      content: "\f107";
-      font-family: "FontAwesome";
-      font-size: 18px;
+      content: "\25BC";
+      font-size: 10px;
       margin-left: 5px;
+      display: inline-block;
+      vertical-align: 1px;
     }
   }
 
@@ -406,23 +329,22 @@ $mdl-layout-width: 1440px;
   .popover-menu__toggle {
     padding: 8px 12px;
     padding-right: 90px;
-    color: $kobo-darkgray;
-    background: $kobo-whitegray;
+    color: $kobo-gray-40;
+    background: $kobo-gray-96;
     position: relative;
 
     @include box-shadow;
 
     &:hover {
-      color: $kobo-black;
+      color: $kobo-gray-24;
     }
 
     &::after {
       position: absolute;
       right: 10px;
-      top: 8px;
-      content: "\f0d7";
-      font-family: "FontAwesome";
-      font-size: 16px;
+      top: 9px;
+      content: "\25BC";
+      font-size: 10px;
     }
   }
 
@@ -440,7 +362,7 @@ $mdl-layout-width: 1440px;
       max-width: 100%;
       white-space: normal;
       padding: 12px;
-      border-bottom: 1px solid $kobo-lightgray;
+      border-bottom: 1px solid $kobo-gray-92;
       border-left: 2px solid transparent;
 
       &:last-child {
@@ -449,7 +371,7 @@ $mdl-layout-width: 1440px;
 
       .collect-data-label {
         font-weight: 600;
-        color: $kobo-black;
+        color: $kobo-gray-24;
       }
 
       .collect-data-desc {
@@ -518,7 +440,7 @@ iframe {
   label {
     font-weight: normal;
     font-size: 12px;
-    color: $kobo-darkgray;
+    color: $kobo-gray-40;
 
     &.long {
       padding-top: 5px;
@@ -548,7 +470,7 @@ iframe {
     padding: 4px 10px;
     font-size: 15px;
     border: 1px solid transparent;
-    border-bottom-color: $kobo-lightgray;
+    border-bottom-color: $kobo-gray-92;
     transition: border-color 0.3s;
 
     &:focus {
@@ -574,7 +496,7 @@ iframe {
   .form-modal__item {
     select {
       max-width: 90%;
-      background: $kobo-midgray;
+      background: $kobo-gray-65;
     }
   }
 }
@@ -585,7 +507,7 @@ iframe {
   padding: 6px 0px;
   font-size: 15px;
   border: 1px solid transparent;
-  border-bottom-color: $kobo-lightgray;
+  border-bottom-color: $kobo-gray-92;
   transition: border-color 0.3s;
 
   &:focus {
@@ -603,10 +525,19 @@ span.svg-icon {
   }
 }
 
-// faster spinning icons, based on fa-spin
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// spinning with easing
 .k-spin {
-  -webkit-animation: fa-spin 1.2s infinite linear;
-  animation: fa-spin 1.2s infinite linear;
+  transform-origin: center;
+  animation: spinner 1.2s infinite ease-in-out;
 }
 
 // Scrollbar overrides
@@ -620,13 +551,13 @@ span.svg-icon {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: $kobo-midgray;
+  background-color: $kobo-gray-65;
   background-color: transparent;
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: $kobo-midgray;
+  background-color: $kobo-gray-65;
   outline: none;
   border-radius: 6px;
 }
@@ -645,7 +576,7 @@ span.svg-icon {
   font-size: 18px;
 
   i {
-    font-size: 64px;
+    font-size: 46px;
     display: block;
     margin: 0 auto;
     margin-bottom: 10px;

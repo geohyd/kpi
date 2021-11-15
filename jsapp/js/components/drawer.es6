@@ -3,23 +3,34 @@ import PropTypes from 'prop-types';
 import reactMixin from 'react-mixin';
 import autoBind from 'react-autobind';
 import Reflux from 'reflux';
-import { Link } from 'react-router';
+import { Link, hashHistory } from 'react-router';
 import {stores} from '../stores';
-import {bem} from '../bem';
+import bem from 'js/bem';
 import {searches} from '../searches';
 import mixins from '../mixins';
 import LibrarySidebar from 'js/components/library/librarySidebar';
 import {
   IntercomHelpBubble,
-  SupportHelpBubble
+  SupportHelpBubble,
 } from '../components/helpBubbles';
 import {
   COMMON_QUERIES,
   MODAL_TYPES,
-  ROUTES,
 } from '../constants';
+import {ROUTES} from 'js/router/routerConstants';
 import {assign} from 'utils';
 import SidebarFormsList from '../lists/sidebarForms';
+import envStore from 'js/envStore';
+
+const INITIAL_STATE = {
+  headerFilters: 'forms',
+  searchContext: searches.getSearchContext('forms', {
+    filterParams: {
+      assetType: COMMON_QUERIES.s,
+    },
+    filterTags: COMMON_QUERIES.s,
+  })
+};
 
 class FormSidebar extends Reflux.Component {
   constructor(props){
@@ -28,25 +39,22 @@ class FormSidebar extends Reflux.Component {
       currentAssetId: false,
       files: []
     }, stores.pageState.state);
+    this.state = assign(INITIAL_STATE, this.state);
+
     this.stores = [
       stores.session,
       stores.pageState
     ];
+    this.unlisteners = [];
     autoBind(this);
   }
-  componentWillMount() {
-    this.setStates();
+  componentDidMount() {
+    this.unlisteners.push(
+      hashHistory.listen(this.onRouteChange.bind(this))
+    );
   }
-  setStates() {
-    this.setState({
-      headerFilters: 'forms',
-      searchContext: searches.getSearchContext('forms', {
-        filterParams: {
-          assetType: COMMON_QUERIES.s,
-        },
-        filterTags: COMMON_QUERIES.s,
-      })
-    });
+  componentWillUnmount() {
+    this.unlisteners.forEach((clb) => {clb();});
   }
   newFormModal (evt) {
     evt.preventDefault();
@@ -54,21 +62,24 @@ class FormSidebar extends Reflux.Component {
       type: MODAL_TYPES.NEW_FORM
     });
   }
-  render () {
+  render() {
     return (
       <React.Fragment>
-        <bem.KoboButton onClick={this.newFormModal} m={['blue', 'fullwidth']}>
+        <bem.KoboButton
+          m={['blue', 'fullwidth']}
+          disabled={!stores.session.isLoggedIn}
+          onClick={this.newFormModal}
+        >
           {t('new')}
         </bem.KoboButton>
         <SidebarFormsList/>
       </React.Fragment>
     );
   }
-  componentWillReceiveProps() {
-    this.setStates();
+  onRouteChange() {
+    this.setState(INITIAL_STATE);
   }
-
-};
+}
 
 FormSidebar.contextTypes = {
   router: PropTypes.object
@@ -91,8 +102,7 @@ class DrawerLink extends React.Component {
     }
   }
   render () {
-    var icon_class = (this.props['ki-icon'] == undefined ? 'fa fa-globe' : `k-icon-${this.props['ki-icon']}`);
-    var icon = (<i className={icon_class}/>);
+    var icon = (<i className={`k-icon-${this.props['k-icon']}`}/>);
     var classNames = [this.props.class, 'k-drawer__link'];
 
     var link;
@@ -126,15 +136,19 @@ class Drawer extends Reflux.Component {
     this.stores = [
       stores.session,
       stores.pageState,
-      stores.serverEnvironment,
     ];
   }
-  render () {
+  render() {
+    // no sidebar for not logged in users
+    if (!stores.session.isLoggedIn) {
+      return null;
+    }
+
     return (
       <bem.KDrawer>
         <bem.KDrawer__primaryIcons>
-          <DrawerLink label={t('Projects')} linkto={ROUTES.FORMS} ki-icon='projects' />
-          <DrawerLink label={t('Library')} linkto={ROUTES.LIBRARY} ki-icon='library' />
+          <DrawerLink label={t('Projects')} linkto={ROUTES.FORMS} k-icon='projects' />
+          <DrawerLink label={t('Library')} linkto={ROUTES.LIBRARY} k-icon='library' />
         </bem.KDrawer__primaryIcons>
 
         <bem.KDrawer__sidebar>
@@ -145,13 +159,14 @@ class Drawer extends Reflux.Component {
         </bem.KDrawer__sidebar>
 
         <bem.KDrawer__secondaryIcons>
-          { stores.session.currentAccount &&
+          { stores.session.isLoggedIn &&
             <IntercomHelpBubble/>
           }
-          { stores.session.currentAccount &&
+          { stores.session.isLoggedIn &&
             <SupportHelpBubble/>
           }
-          { stores.session.currentAccount &&
+          { stores.session.isLoggedIn &&
+            stores.session.currentAccount.projects_url &&
             <a href={stores.session.currentAccount.projects_url}
               className='k-drawer__link'
               target='_blank'
@@ -160,11 +175,11 @@ class Drawer extends Reflux.Component {
               <i className='k-icon k-icon-globe' />
             </a>
           }
-          { stores.serverEnvironment &&
-            stores.serverEnvironment.state.source_code_url &&
-            <a href={stores.serverEnvironment.state.source_code_url}
+          { envStore.isReady &&
+            envStore.data.source_code_url &&
+            <a href={envStore.data.source_code_url}
               className='k-drawer__link' target='_blank' data-tip={t('Source')}>
-              <i className='k-icon k-icon-github' />
+              <i className='k-icon k-icon-logo-github' />
             </a>
           }
         </bem.KDrawer__secondaryIcons>
