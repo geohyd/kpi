@@ -232,8 +232,8 @@
   .project-downloads__legacy-iframe-wrapper {
     iframe {
       width: 100%;
-      height: 500px; // Doubled the size
-      border: 1px solid $kobo-lightgray;
+      height: 500px; // ANTEA : Doubled height size
+      border: 1px solid $kobo-gray-92;
       border-radius: 4px;
     }
   }

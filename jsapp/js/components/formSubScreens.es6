@@ -109,17 +109,6 @@ export class FormSubScreens extends React.Component {
         </DocumentTitle>
     );
   }
-  renderProjectDownloads() {
-    var docTitle = this.state.name || t('Untitled');
-    return (
-      <DocumentTitle title={`Survea - ${docTitle}`}>
-        <bem.FormView className='project-downloads'>
-          <ProjectExportsCreator asset={this.state} />
-          <ProjectExportsList asset={this.state} />
-        </bem.FormView>
-      </DocumentTitle>
-    );
-  }
   renderSharing() {
     const uid = this.props.params.assetid || this.props.params.uid;
     return (

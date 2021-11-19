@@ -25,4 +25,5 @@ celerybeat-schedule
 deployments.json
 .DS_Store
 jsapp/fonts
+# ANTEA : add media folder in gitignore
 media

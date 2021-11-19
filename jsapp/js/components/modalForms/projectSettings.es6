@@ -853,6 +853,57 @@ class ProjectSettings extends React.Component {
             />
           </bem.FormModal__item>
 
+          {/*ANTEA Comment 
+          <bem.FormModal__item>
+            <label className='long'>
+              {t('Please specify the country and the sector where this project will be deployed. ')}
+              */}
+              {/*t('This information will be used to help you filter results on the project list page.')*/}
+          {/*ANTEA Comment   
+          </label>
+          </bem.FormModal__item>
+
+          <bem.FormModal__item m='sector'>
+            <label htmlFor='sector'>
+              {t('Sector')}
+            </label>
+            <Select
+              id='sector'
+              value={this.state.sector}
+              onChange={this.onSectorChange}
+              options={sectors}
+              className='kobo-select'
+              classNamePrefix='kobo-select'
+              menuPlacement='auto'
+              isClearable
+            />
+          </bem.FormModal__item>
+
+          <bem.FormModal__item m='country'>
+            <label htmlFor='country'>
+              {t('Country')}
+            </label>
+            <Select
+              id='country'
+              value={this.state.country}
+              onChange={this.onCountryChange}
+              options={countries}
+              className='kobo-select'
+              classNamePrefix='kobo-select'
+              menuPlacement='auto'
+              isClearable
+            />
+          </bem.FormModal__item>
+
+          <bem.FormModal__item m='metadata-share'>
+            <Checkbox
+              checked={this.state['share-metadata']}
+              onChange={this.onShareMetadataChange}
+              label={t('Help KoboToolbox improve this product by sharing the sector and country where this project will be deployed.') + ' ' + t('All the information is submitted anonymously, and will not include the project name or description listed above.')}
+            />
+          </bem.FormModal__item>
+          */}
+
           {(this.props.context === PROJECT_SETTINGS_CONTEXTS.NEW || this.props.context === PROJECT_SETTINGS_CONTEXTS.REPLACE) &&
             <bem.Modal__footer>
               {/* Don't allow going back if asset already exist */}

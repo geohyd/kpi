@@ -124,6 +124,7 @@ export class FormMap extends React.Component {
       preferCanvas: true
     });
     this.state.map = map;
+    // TODO : this.state.map = map; est vraiment nécessaire ?
     // ANTEA END
 
     streets.addTo(map);
