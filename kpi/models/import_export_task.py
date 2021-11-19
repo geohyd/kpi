@@ -395,7 +395,7 @@ def export_upload_to(self, filename):
     """
     return posixpath.join(self.user.username, 'exports', filename)
 
-
+# ANTEA - Add header_lang args
 class ExportTask(ImportExportTask):
     """
     An (asynchronous) submission data export job. The instantiator must set the
@@ -513,6 +513,7 @@ class ExportTask(ImportExportTask):
                 extension = 'pdf'
             else:
                 extension = export_type.split("_")[-1]
+            # ANTEA END
         else:
             extension = export_type
 
@@ -573,7 +574,7 @@ class ExportTask(ImportExportTask):
             pass
         tag_cols_for_header = self.data.get('tag_cols_for_header', ['hxl'])
 
-        # ANTEA add geader_lang param at the end
+        # ANTEA add header_lang param at the end
         return {
             'versions': pack.versions.keys(),
             'group_sep': group_sep,
@@ -644,7 +645,7 @@ class ExportTask(ImportExportTask):
 
         export_type = self.data.get('type', '').lower()
         if export_type not in ('xls', 'csv', 'geojson', 'spss_labels'):
-            # ANTEA check if antea export
+            # ANTEA check if also not an antea export
             if 'antea_' not in export_type:
                 raise NotImplementedError(
                     'only `xls`, `csv`, `geojson`, and `spss_labels` '

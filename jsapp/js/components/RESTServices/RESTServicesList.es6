@@ -10,6 +10,8 @@ import LoadingSpinner from 'js/components/common/loadingSpinner';
 import {MODAL_TYPES} from '../../constants';
 import envStore from 'js/envStore';
 
+//ANTEA Change REST_SERVICSE SUPPORT URL
+// TODO : Need to be in Settings - go to make a PR ?
 const REST_SERVICES_SUPPORT_URL = 'https://support.anteagroup.fr/';
 
 export default class RESTServicesList extends React.Component {

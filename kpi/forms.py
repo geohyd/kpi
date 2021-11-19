@@ -55,6 +55,7 @@ class RegistrationForm(registration_forms.RegistrationForm):
 
     class Meta:
         model = User
+        # ANTEA : Just username and email in fields list
         fields = [
             'username',
             'email'
