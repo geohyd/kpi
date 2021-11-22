@@ -47,6 +47,7 @@
 }
 
 .k-drawer__secondary-icons {
+  visibility: hidden; // ANTEA Hide this bottom button until we use it
   left: 0;
   bottom: 0;
   position: absolute;
