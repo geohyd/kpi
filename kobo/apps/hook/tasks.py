@@ -36,6 +36,19 @@ def service_definition_task(self, hook_id, submission_id):
     service_definition = ServiceDefinition(hook, submission_id)
     if not service_definition.send():
         # Countdown is in seconds
+        fields = {
+            'hook': hook,
+            'submission_id': submission_id
+        }
+        try:
+            # Try to load the log with a multiple field FK because
+            # we don't know the log `uid` in this context, but we do know
+            # its `hook` FK and its `submission_id`
+            # print(f"service_definition_task : {hook_id} - self.request.retries : {self.request.retries}
+            hookLog = HookLog.objects.get(**fields)
+            self.request.retries = hookLog.tries
+        except HookLog.DoesNotExist:
+            print("HookLog DoesNotExist - ByPass the request.retries override")
         countdown = HookLog.get_remaining_seconds(self.request.retries)
         raise self.retry(countdown=countdown, max_retries=constance.config.HOOK_MAX_RETRIES)
 

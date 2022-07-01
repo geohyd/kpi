@@ -92,6 +92,14 @@ class AssetFileSerializer(serializers.ModelSerializer):
 
         # Common validators
         filename = metadata['filename']
+        #ANTEA TEST
+        if 'redirect_url' in metadata:
+            from urllib.parse import parse_qs
+            parsed_url = urlparse(metadata['redirect_url'])
+            url_args = parse_qs(parsed_url.query)
+            if 'filename' in url_args:
+                metadata['filename'] = url_args['filename'][0]
+                filename = url_args['filename'][0]
         self.__validate_mime_type(filename, validated_field)
         self._validate_duplicate(filename, validated_field)
 

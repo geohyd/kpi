@@ -86,6 +86,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'oauth2_provider',
+    # 'django_auth_adfs',
     'markitup',
     'django_digest',
     'kobo.apps.superuser_stats.SuperuserStatsAppConfig',
@@ -108,6 +109,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django_auth_adfs.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'hub.middleware.UsernameInResponseHeaderMiddleware',
@@ -213,6 +215,7 @@ MARKITUP_FILTER = ('markdown.markdown', {'safe_mode': False})
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'kpi.backends.ObjectPermissionBackend',
+    # 'django_auth_adfs.backend.AdfsAuthCodeBackend',
 )
 
 ROOT_URLCONF = 'kobo.urls'
@@ -566,7 +569,7 @@ LOGGING = {
         'django.db.backends': {
             'level': 'ERROR',
             'handlers': ['console'],
-            'propagate': True
+            'propagate': False
         },
     }
 }
