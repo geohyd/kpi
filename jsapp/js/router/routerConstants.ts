@@ -1,6 +1,6 @@
 // List of server routes
 export const PATHS = Object.freeze({
-  LOGIN: '/accounts/login',
+  LOGIN: '/survea/accounts/login',
 });
 
 // List of React app routes (the # ones)

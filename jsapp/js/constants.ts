@@ -23,7 +23,7 @@ export const ROOT_URL = (() => {
   let rootPath = '';
   if (rootPathEl === null) {
     console.error('no kpi-root-path meta tag set. defaulting to ""');
-    rootPath = '';
+    rootPath = '/survea/';
   } else {
     // Strip trailing slashes
     rootPath = rootPathEl.content.replace(/\/*$/, '');

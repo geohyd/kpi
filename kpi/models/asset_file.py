@@ -79,6 +79,9 @@ class AssetFile(models.Model, AbstractFormMedia):
             'text/csv',
             'application/xml',
             'application/zip',
+            # ANTEA allow json and geojson files (for geojsonmap widget)
+            'application/geo+json',
+            'application/json',
         ),
         PAIRED_DATA: ('application/xml',),
         MAP_LAYER: (

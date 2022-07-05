@@ -26,7 +26,7 @@ export function getLoginUrl() {
   let url = PATHS.LOGIN;
   const currentLoc = hashHistory.getCurrentLocation();
   if (currentLoc?.pathname) {
-    const nextUrl = encodeURIComponent(`/#${currentLoc.pathname}`);
+    const nextUrl = encodeURIComponent(`/survea/#${currentLoc.pathname}`);
     // add redirection after logging in to current page
     url += `?next=${nextUrl}`;
   }

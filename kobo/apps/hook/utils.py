@@ -26,5 +26,8 @@ class HookUtils:
             ).exists():
                 success = True
                 service_definition_task.delay(hook_id, submission_id)
-
+            else: # This is an edit hook -> Need to be in settings hook
+                currentHook = HookLog.objects.filter(submission_id=submission_id, hook_id=hook_id).first()
+                currentHook.retry()
+                success = True
         return success

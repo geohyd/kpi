@@ -289,7 +289,7 @@ class MainHeader extends Reflux.Component {
               </bem.Button>
             }
             <span className='mdl-layout-title'>
-              <a href='/'>
+              <a href='/survea/'>
                 <bem.Header__logo />
               </a>
             </span>

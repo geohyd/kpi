@@ -205,7 +205,7 @@ export default class RESTServiceLogs extends React.Component {
       <header className='rest-services-list__header'>
         <a
           className='rest-services-list__header-back-button'
-          href={`/#/forms/${this.state.assetUid}/settings/rest`}
+          href={`/survea/#/forms/${this.state.assetUid}/settings/rest`}
         >
           <i className='k-icon k-icon-prev' />
           {t('Back to REST Services')}

@@ -22,9 +22,13 @@
 {% endblock %}
 
 {% block content %}
+
 {% endblock %}
 
 {% block background_credit %}
+    <!--<a href="{% url 'django_auth_adfs:logout' %}">Logout</a> -->
+    <!-- <a href="{% url 'django_auth_adfs:login' %}">Login with SSO</a> -->
+    <!--<a href="{% url 'django_auth_adfs:login-no-sso' %}">Login (no SSO)</a> -->
     {% if not config.login_background %}
     {# Show the background image credit only if we're using the default image #}
     <!-- ANTEA COMMENT 

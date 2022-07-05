@@ -165,7 +165,7 @@ export default class RESTServicesList extends React.Component {
             </bem.ServiceRow>
 
             {this.state.hooks.map((hook) => {
-              const logsUrl = `/#/forms/${this.state.assetUid}/settings/rest/${hook.uid}`;
+              const logsUrl = `/survea/#/forms/${this.state.assetUid}/settings/rest/${hook.uid}`;
               return (
                 <bem.ServiceRow key={hook.uid} m={hook.active ? 'active' : 'inactive'}>
                   <bem.ServiceRow__linkOverlay href={logsUrl}/>

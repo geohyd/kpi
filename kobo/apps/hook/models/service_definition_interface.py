@@ -117,7 +117,6 @@ class ServiceDefinitionInterface(metaclass=ABCMeta):
 
                 SSRFProtect.validate(self._hook.endpoint,
                                      options=ssrf_protect_options)
-
                 response = requests.post(self._hook.endpoint, timeout=30,
                                          **request_kwargs)
                 response.raise_for_status()
@@ -182,6 +181,10 @@ class ServiceDefinitionInterface(metaclass=ABCMeta):
             log.status = HOOK_LOG_SUCCESS
         elif log.tries >= constance.config.HOOK_MAX_RETRIES:
             log.status = HOOK_LOG_FAILED
+        ### For to stop retries if http code is constance.config.HOOK_FORCE_FAILED_WITH_STATUS_CODE
+        if constance.config.HOOK_FORCE_FAILED_WITH_STATUS_CODE and status_code == constance.config.HOOK_FORCE_FAILED_WITH_STATUS_CODE :
+            log.status = HOOK_LOG_FAILED
+            log.tries = constance.config.HOOK_MAX_RETRIES
 
         log.status_code = status_code
 

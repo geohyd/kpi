@@ -12,6 +12,7 @@
       {% trans "Forgot?" %}
     </a>
     <input type="submit" value="Login" class="registration__action" />
+    <a href="{% url 'django_auth_adfs:login' %}" class="registration__action">Login with SSO</a>
     <input type="hidden" name="next" value="{{ next }}" />
 
     {% if config.REGISTRATION_OPEN %}

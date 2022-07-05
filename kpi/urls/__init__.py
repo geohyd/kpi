@@ -42,6 +42,7 @@ urlpatterns = [
         form_class=RegistrationForm), name='registration_register'),
     re_path(r'^accounts/logout/', logout, {'next_page': '/'}),
     re_path(r'^accounts/', include('registration.backends.default.urls')),
+    path('oauth2/', include('django_auth_adfs.urls')),
     re_path(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     re_path(
         r'^authorized_application/authenticate_user/$',
