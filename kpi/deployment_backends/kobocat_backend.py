@@ -1260,7 +1260,7 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
         Return a tuple of the KoBoCAT server and its path
         """
         parsed_identifier = urlparse(identifier)
-        server = '{}://{}'.format(
+        server = '{}://{}/survea/kc'.format(
             parsed_identifier.scheme, parsed_identifier.netloc)
         return server, parsed_identifier.path
 
