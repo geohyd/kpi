@@ -38,7 +38,7 @@ export default class LegacyExports extends React.Component {
           <ExportTypeSelector/>
         </bem.ProjectDownloads__selectorRow>
 
-        {this.state.selectedExportType.value !== EXPORT_TYPES.zip_legacy.value && (
+        {this.state.selectedExportType.value !== EXPORT_TYPES.zip_legacy.value && this.state.selectedExportType.value !== EXPORT_TYPES.antea.value && (
           <bem.FormView__cell m='warning'>
             <i className='k-icon-alert' />
             <p>{t('This export format will not be supported in the future. Please consider using one of the other export types available.')}</p>
@@ -46,7 +46,9 @@ export default class LegacyExports extends React.Component {
         )}
 
         <div className='project-downloads__legacy-iframe-wrapper'>
-          <iframe src={
+        <iframe src={
+            (this.state.selectedExportType.value === EXPORT_TYPES.antea.value) ?
+            '/survea/tools/exports/' + this.props.asset.uid + '/':
             this.props.asset.deployment__data_download_links[this.state.selectedExportType.value]
           } />
         </div>
