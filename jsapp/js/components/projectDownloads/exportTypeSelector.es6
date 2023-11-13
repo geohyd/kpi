@@ -41,6 +41,7 @@ export default class ExportTypeSelector extends React.Component {
     // make xls topmost (as most popular)
     const exportTypesOptions = [
       EXPORT_TYPES.xls,
+      EXPORT_TYPES.antea,
       EXPORT_TYPES.csv,
       EXPORT_TYPES.geojson,
       EXPORT_TYPES.spss_labels,
