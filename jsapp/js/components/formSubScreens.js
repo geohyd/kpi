@@ -46,8 +46,10 @@ export class FormSubScreens extends React.Component {
     var uid =
       this.props.params.assetid || this.props.uid || this.props.params.uid;
     if (uid) {
-      actions.resources.loadAsset({id: uid});
+      actions.resources.loadAsset({id: uid}); // THIS LOAD SURVEY DATA !
     }
+    console.log("FORM SUB SCREEN PROPS =>", this.props)
+    console.log("FORM SUB SCREEN STATE =>", this.state)
   }
   render() {
     if (!this.state.permissions) {

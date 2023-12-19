@@ -116,6 +116,7 @@ export class FormMap extends React.Component {
       'decimal',
       'text',
     ];
+
     this.props.asset.content.survey.forEach(function (q) {
       if (fieldTypes.includes(q.type)) {
         fields.push(q);
@@ -163,6 +164,8 @@ export class FormMap extends React.Component {
       this.props.asset.uid,
       ASSET_FILE_TYPES.map_layer.id
     );
+
+    console.log("MAP PROPS => ", this.props)
   }
 
   loadOverlayLayers() {
@@ -286,8 +289,9 @@ export class FormMap extends React.Component {
   requestData(map, nextViewBy = '') {
     // TODO: support area / line geodata questions
     // See: https://github.com/kobotoolbox/kpi/issues/3913
+    console.log("SELECTED QUESTION",this.props.asset.map_styles.selectedQuestion)
     let selectedQuestion = this.props.asset.map_styles.selectedQuestion || null;
-
+    console.log("ASSET => ", this.props.asset)
     this.props.asset.content.survey.forEach(function (row) {
       if (
         typeof row.label !== 'undefined' &&
@@ -311,26 +315,43 @@ export class FormMap extends React.Component {
       fq.push(selectedQuestion);
     }
     if (nextViewBy) {
-      fq.push(this.nameOfFieldInGroup(nextViewBy));
+      /**
+       * @WIP
+       * 
+       * Warning ! if you have sensitive eyes, move on
+       * 
+       * Filter if vilidation status or not
+       */
+      if(nextViewBy === "validation_status") {
+        fq.push("_validation_status")
+      } else {
+        fq.push(this.nameOfFieldInGroup(nextViewBy));
+      }
     }
     const sort = [{id: '_id', desc: true}];
     dataInterface
       .getSubmissions(this.props.asset.uid, queryLimit, 0, sort, fq)
       .done((data) => {
         const results = data.results;
-        if (selectedQuestion) {
-          results.forEach(function (row, i) {
-            if (row[selectedQuestion]) {
-              const coordsArray = row[selectedQuestion].split(' ');
-              results[i]._geolocation[0] = coordsArray[0];
-              results[i]._geolocation[1] = coordsArray[1];
-            }
-          });
-        }
-
-        this.setState({submissions: results});
-        this.buildMarkers(map);
-        this.buildHeatMap(map);
+        results.forEach(r => {
+          r.bckp = r._validation_status
+          r._validation_status = Object.keys(r).includes("_validation_status") && r._validation_status.label || "Pas défini"
+          r.validation_status = r._validation_status
+        })
+        console.log(results)
+          if (selectedQuestion) {
+            results.forEach(function (row, i) {
+              if (row[selectedQuestion]) {
+                const coordsArray = row[selectedQuestion].split(' ');
+                results[i]._geolocation[0] = coordsArray[0];
+                results[i]._geolocation[1] = coordsArray[1];
+              }
+            });
+          }
+  
+          this.setState({submissions: results});
+          this.buildMarkers(map);
+          this.buildHeatMap(map);
       })
       .fail((error) => {
         if (error.responseText) {
@@ -376,19 +397,29 @@ export class FormMap extends React.Component {
         this.state.submissions,
         this.props.viewby
       );
-      const choices = this.props.asset.content.choices;
+      const choices = [{
+        name: "option_1",
+        $kuid: "aZa6La5Zf",
+        label: [
+            "Option 1"
+        ],
+        list_name: "cv9je23",
+        $autovalue: "option_1"
+    }] //this.props.asset.content.choices;
       const survey = this.props.asset.content.survey;
-
+      console.log(" survey -> ", survey);
+      console.log(" viewby -> ", viewby);
       const question = survey.find(
         (s) => s.name === viewby || s.$autoname === viewby
       );
+      console.log(" question -> ", question);
 
       if (question && question.type === 'select_one') {
         currentQuestionChoices = choices.filter(
           (ch) => ch.list_name === question.select_from_list_name
         );
       }
-
+      console.log("mapMarkers -> ", mapMarkers);
       Object.keys(mapMarkers).map(function (m) {
         let choice;
         if (question && question.type === 'select_one') {
@@ -396,14 +427,38 @@ export class FormMap extends React.Component {
             (ch) => ch.name === m || ch.$autoname === m
           );
         }
-
+        console.log("the m marker -> ", m)
+        
         mM.push({
           count: mapMarkers[m].count,
           id: mapMarkers[m].id,
           labels: choice ? choice.label : undefined,
           value: m !== 'undefined' ? m : undefined,
         });
+        
       });
+      if(viewby == "validation_status"){
+        mM.push({
+          count: 1,
+          id: 2,
+          labels: ['Not Approved'],
+          value: "validation_status_not_approved",
+        });
+        mM.push({
+          count: 1,
+          id: 3,
+          labels: ['Approved'],
+          value: "validation_status_approved",
+        });
+        mM.push({
+          count: 1,
+          id: 4,
+          labels: ['On Hold'],
+          value: "validation_status_on_hold",
+        });
+
+      }
+      console.log("mM -> ", mM)
 
       if (
         colorSet !== undefined &&
@@ -451,12 +506,34 @@ export class FormMap extends React.Component {
           if (colorSet !== undefined && colorSet !== 'a') {
             index = _this.calculateIconIndex(index, mM);
           }
-
-          markerProps = {
-            icon: _this.buildIcon(index + 1),
-            sId: item._id,
-            typeId: mapMarkers[itemId].id,
-          };
+          console.log("item : ", item)
+          if(viewby == "validation_status"){
+            let typeId = 1
+            if(Object.keys(item).includes("bckp") && item.bckp.uid){
+              switch(item.bckp.uid){
+                case "validation_status_not_approved": 
+                  typeId = 2
+                  break;
+                case "validation_status_approved": 
+                  typeId = 3
+                  break;
+                case "validation_status_on_hold": 
+                  typeId = 4
+                  break;
+              }
+            }
+            markerProps = {
+              icon: _this.buildIcon(index + 1),
+              sId: item._id,
+              typeId: typeId,
+            };
+          } else {
+            markerProps = {
+              icon: _this.buildIcon(index + 1),
+              sId: item._id,
+              typeId: mapMarkers[itemId].id,
+            };
+          }
         } else {
           markerProps = {
             icon: _this.buildIcon(),
@@ -568,6 +645,7 @@ export class FormMap extends React.Component {
         markerMap[m]['count'] += 1;
       }
     });
+    console.log("MARKER MAP =>", markerMap)
 
     return markerMap;
   }
@@ -712,6 +790,7 @@ export class FormMap extends React.Component {
   }
 
   filterByMarker(evt) {
+    console.log("filterByMarker !!")
     const markers = this.state.markers;
     const id = evt.target.getAttribute('data-id');
     let filteredByMarker = this.state.filteredByMarker;
@@ -727,6 +806,9 @@ export class FormMap extends React.Component {
 
     this.setState({filteredByMarker: filteredByMarker});
     markers.eachLayer(function (layer) {
+      console.log("layer object : ", layer);
+      console.log("layer.options.typeId object : ", layer.options.typeId);
+      console.log("filteredByMarker : ", filteredByMarker);
       if (!filteredByMarker.includes(layer.options.typeId.toString())) {
         layer._icon.classList.add(unselectedClass);
       } else {
@@ -761,7 +843,18 @@ export class FormMap extends React.Component {
       );
     }
 
-    const fields = this.state.fields;
+    const fields = [...this.state.fields, {
+      type: "text",
+      $kuid: "validation_status",
+      label: [
+          "Validation status"
+      ],
+      $qpath: "validation_status",
+      $xpath: "validation_status",
+      required: false,
+      $autoname: "validation_status",
+      select_from_list_name: ""
+  }];
     const langIndex = this.state.langIndex;
     const langs =
       this.props.asset.content.translations?.length > 1
@@ -774,6 +867,7 @@ export class FormMap extends React.Component {
 
     if (viewby) {
       fields.forEach(function (f) {
+        //console.log("FILEDS => ", fields)
         if (viewby === f.name || viewby === f.$autoname) {
           label = `${t('Disaggregated using:')} ${f.label[langIndex]}`;
         }
