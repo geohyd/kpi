@@ -25,7 +25,7 @@ def noop(*args, **kwargs):
 
 
 class Migration(migrations.Migration):
-
+    atomic = False # Because extrauserdetail is already used
     dependencies = [
         ('hub', '0008_add_removal_dates_to_extrauserdetail'),
     ]

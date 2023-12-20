@@ -14,7 +14,7 @@ import {
   escapeHtml,
 } from 'js/utils';
 
-const REST_SERVICES_SUPPORT_URL = 'rest_services.html';
+const REST_SERVICES_SUPPORT_URL = 'https://support.anteagroup.fr/';
 
 export default class RESTServicesList extends React.Component {
   constructor(props){

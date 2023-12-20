@@ -178,9 +178,9 @@
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build"
   },
-  "repository": "https://github.com/kobotoolbox/kpi.git",
+  "repository": "https://github.com/geohyd/kpi.git",
   "author": "alex.dorey@kobotoolbox.org, esmail.fadae@kobotoolbox.org, john.milner@kobotoolbox.org",
   "license": "AGPL-3.0",
-  "bugs": "https://github.com/kobotoolbox/kpi/issues",
-  "homepage": "https://github.com/kobotoolbox/kpi"
+  "bugs": "https://github.com/geohyd/kpi/issues",
+  "homepage": "https://github.com/geohyd/kpi"
 }

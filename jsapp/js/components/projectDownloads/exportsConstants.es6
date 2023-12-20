@@ -9,6 +9,7 @@ export const EXPORT_TYPES = Object.freeze({
   xls_legacy: {value: 'xls_legacy', label: t('XLS (legacy)'), isLegacy: true},
   xls: {value: 'xls', label: t('XLS'), isLegacy: false},
   zip_legacy: {value: 'zip_legacy', label: t('Media Attachments (ZIP)'), isLegacy: true},
+  antea: {value: 'antea', label: t('Antea Exports'), isLegacy: true},
 });
 
 export const EXPORT_FORMATS = Object.freeze({

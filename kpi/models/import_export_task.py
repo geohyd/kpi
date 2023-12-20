@@ -516,6 +516,12 @@ class ExportTaskBase(ImportExportTask):
               response values. Specify `_xml` to use question and choice names
               instead of labels. Leave unset, or use `_default` for labels in
               the default language
+    * `header_lang`: optional; the name of the translation to be used just for
+              headers values. Specify `_xml` to use question names in headers
+              instead of labels. Use `_default` for headers labels in the
+              default language. Leave unset for override it and use lang arg
+              value.	              value.
+              Need this PR : https://github.com/kobotoolbox/formpack/pull/215
     * `hierarchy_in_labels`: optional; when `true`, include the labels for all
                              ancestor groups in each field label, separated by
                              `group_sep`. Defaults to `False`
@@ -602,6 +608,18 @@ class ExportTaskBase(ImportExportTask):
             extension = 'xlsx'
         elif export_type == 'spss_labels':
             extension = 'zip'
+        # ANTEA export type
+        elif "antea" in export_type:
+            if "xlsx" in export_type:
+                extension = 'xlsx'
+            elif "docx" in export_type:
+                extension = 'docx'
+            elif "zip" in export_type:
+                extension = 'zip'
+            elif "pdf" in export_type:
+                extension = 'pdf'
+            else:
+                extension = export_type.split("_")[-1]
         else:
             extension = export_type
 
@@ -646,6 +664,8 @@ class ExportTaskBase(ImportExportTask):
         multiple_select = self.data.get('multiple_select', 'both')
         translations = pack.available_translations
         lang = self.data.get('lang', None) or next(iter(translations), None)
+        # ANTEA HEADER_LANG PARAM
+        header_lang = self.data.get('header_lang', lang)
         fields = self.data.get('fields', [])
         xls_types_as_text = self.data.get('xls_types_as_text', True)
         include_media_url = self.data.get('include_media_url', False)
@@ -654,10 +674,13 @@ class ExportTaskBase(ImportExportTask):
             # If applicable, substitute the constants that formpack expects for
             # friendlier language strings used by the API
             lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[lang]
+            # ANTEA HEADER_LANG PARAM
+            header_lang = self.API_LANGUAGE_TO_FORMPACK_LANGUAGE[header_lang]
         except KeyError:
             pass
         tag_cols_for_header = self.data.get('tag_cols_for_header', ['hxl'])
 
+        # ANTEA add geader_lang param at the end
         return {
             'versions': pack.versions.keys(),
             'group_sep': group_sep,
@@ -670,6 +693,7 @@ class ExportTaskBase(ImportExportTask):
             'filter_fields': fields,
             'xls_types_as_text': xls_types_as_text,
             'include_media_url': include_media_url,
+            'header_lang' : header_lang,
         }
 
     @property
@@ -754,9 +778,9 @@ class ExportTaskBase(ImportExportTask):
             # Excel exports are always returned in XLSX format, but they're
             # referred to internally as `xls`
             export_type = 'xls'
-        if export_type not in ('xls', 'csv', 'geojson', 'spss_labels'):
+        if export_type not in ('xls', 'csv', 'geojson', 'spss_labels', 'antea'):
             raise NotImplementedError(
-                'only `xls`, `csv`, `geojson`, and `spss_labels` '
+                'only `antea`, `xls`, `csv`, `geojson`, and `spss_labels` '
                 'are valid export types'
             )
 
@@ -796,6 +820,12 @@ class ExportTaskBase(ImportExportTask):
                     output_file.write(xlsx_output_file.read())
             elif export_type == 'spss_labels':
                 export.to_spss_labels(output_file)
+            # ANTEA check if antea export
+            elif "antea" in export_type:
+                from rest_framework.authtoken.models import Token
+                token = Token.objects.get(user=self.user)
+                xform_id = self.data["source"].split("/")[-2]
+                export.to_antea(settings, output_file, submission_stream, xform_id, token.key, self.user, export_type)
 
         self.result = absolute_filepath
 

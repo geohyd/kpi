@@ -83,7 +83,7 @@ class App extends React.Component {
     }
 
     return (
-      <DocumentTitle title='KoboToolbox'>
+      <DocumentTitle title='Survea'>
         <React.Fragment>
           <Tracking />
           <ToasterConfig />

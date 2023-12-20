@@ -348,7 +348,7 @@ class FormSummary extends React.Component {
     const docTitle = this.state.name || t('Untitled');
 
     return (
-      <DocumentTitle title={`${docTitle} | KoboToolbox`}>
+      <DocumentTitle title={`Survea | ${docTitle}`}>
         <bem.FormView m='summary'>
           <bem.FormView__column m='left'>
             {/* We only want to pass an actual asset object, but because this

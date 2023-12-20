@@ -610,7 +610,7 @@ export default function Plan() {
                       'For organizations with higher volume and advanced data collection needs, get in touch to learn more about our '
                     )}
                     <a
-                      href='https://www.kobotoolbox.org/contact/'
+                      href='https://support.anteagroup.fr'
                       target='_blanks'
                       className={styles.enterpriseLink}
                     >
@@ -624,7 +624,7 @@ export default function Plan() {
                     )}
                     <br />
                     <a
-                      href='https://www.kobotoolbox.org/contact/'
+                      href='https://support.anteagroup.fr'
                       target='_blanks'
                       className={styles.enterpriseLink}
                     >

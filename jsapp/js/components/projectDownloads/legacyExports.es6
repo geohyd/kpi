@@ -39,7 +39,7 @@ export default class LegacyExports extends React.Component {
           <ExportTypeSelector/>
         </bem.ProjectDownloads__selectorRow>
 
-        {this.state.selectedExportType.value !== EXPORT_TYPES.zip_legacy.value && (
+        {this.state.selectedExportType.value !== EXPORT_TYPES.zip_legacy.value && this.state.selectedExportType.value !== EXPORT_TYPES.antea.value &&(
           <InlineMessage
             type='warning'
             icon='alert'

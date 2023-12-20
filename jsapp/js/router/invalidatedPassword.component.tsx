@@ -24,7 +24,7 @@ export default function InvalidatedPassword() {
   }
 
   return (
-    <DocumentTitle title='KoboToolbox'>
+    <DocumentTitle title='Survea'>
       <>
         <Tracking />
         <ToasterConfig />
