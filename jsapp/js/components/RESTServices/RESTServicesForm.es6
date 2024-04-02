@@ -188,7 +188,6 @@ export default class RESTServicesForm extends React.Component {
   }
   handleMethodOnDeleteChange(isChecked) {
     this.setState({ onEvent: {...this.state.onEvent, onDelete: isChecked }})
-    console.log(this.state.onEvent)
   }
   handleMethodOnValidationChange(isChecked) {
     this.setState({ onEvent: {...this.state.onEvent, onValidation: isChecked }})
@@ -492,7 +491,7 @@ export default class RESTServicesForm extends React.Component {
                     disabled={!this.state.isActive}
                   />
               </div>
-              <div className='res-service-editor__sub-row'>
+              {/*<div className='res-service-editor__sub-row'>
                   <Checkbox
                     name='onDelete'
                     onChange={this.handleMethodOnDeleteChange.bind(this)}
@@ -500,7 +499,7 @@ export default class RESTServicesForm extends React.Component {
                     label={t('On delete')}
                     disabled={!this.state.isActive}
                   />
-              </div>
+              </div>*/}
               <div className='res-service-editor__sub-row'>
                   <Checkbox
                     name='onValidationChange'
