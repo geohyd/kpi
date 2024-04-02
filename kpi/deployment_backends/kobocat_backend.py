@@ -1550,9 +1550,14 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
         Return a tuple of the KoBoCAT server and its path
         """
         parsed_identifier = urlparse(identifier)
-        server = '{}://{}'.format(
-            parsed_identifier.scheme, parsed_identifier.netloc)
-        return server, parsed_identifier.path
+        path = parsed_identifier.path
+        if settings.KOBOCAT_URL in identifier:
+            server = settings.KOBOCAT_URL
+            path = identifier.split(server, 1)[1]
+        else:
+            server = '{}://{}'.format(
+                parsed_identifier.scheme, parsed_identifier.netloc)
+        return server, path
 
     @staticmethod
     def __prepare_as_drf_response_signature(
