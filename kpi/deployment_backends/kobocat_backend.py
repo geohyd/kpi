@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Generator, Optional, Union
 from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
+from lxml import etree
 
 import pytz
 import requests
@@ -143,7 +144,7 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
         update_data = self.__prepare_bulk_update_data(data['data'])
         kc_responses = []
         for submission in submissions:
-            xml_parsed = ET.fromstring(submission)
+            xml_parsed = etree.fromstring(submission)
 
             _uuid, uuid_formatted = self.generate_new_instance_id()
 
@@ -157,7 +158,7 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
             deprecated_id_or_new = (
                 deprecated_id
                 if deprecated_id is not None
-                else ET.SubElement(xml_parsed.find('meta'), 'deprecatedID')
+                else etree.SubElement(xml_parsed.find('meta'), 'deprecatedID')
             )
             deprecated_id_or_new.text = instance_id.text
             instance_id.text = uuid_formatted
