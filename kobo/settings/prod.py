@@ -68,3 +68,10 @@ CONSTANCE_CONFIG["SUPPORT_EMAIL"] = (os.environ.get('KOBO_SUPPORT_EMAIL') or
                       'encounter unhandled errors in the application')
 
 ENV = os.environ.get('KPI_ENV', 'dev')
+
+if os.getenv("FORCE_ERROR_LOGS_FILE", "false").lower() == "true":
+    LOGGING['loggers']['django.request'] = {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+        'propagate': False,
+    }
