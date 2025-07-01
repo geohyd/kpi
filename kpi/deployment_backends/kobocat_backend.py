@@ -549,17 +549,19 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
                 t('Your submission XML is malformed.')
             )
         try:
-            deprecated_uuid = xml_root.find('.//meta/deprecatedID').text
+            #deprecated_uuid = xml_root.find('.//meta/deprecatedID').text
             xform_uuid = xml_root.find('.//formhub/uuid').text
+            root_uuid = xml_root.find('meta/rootUuid').text
         except AttributeError:
             raise SubmissionIntegrityError(
                 t('Your submission XML is missing critical elements.')
             )
         # Remove UUID prefix
-        deprecated_uuid = deprecated_uuid[len('uuid:'):]
+        #deprecated_uuid = deprecated_uuid[len('uuid:'):]
+        root_uuid = root_uuid[len('uuid:'):]
         try:
             instance = ReadOnlyKobocatInstance.objects.get(
-                uuid=deprecated_uuid,
+                root_uuid=root_uuid,
                 xform__uuid=xform_uuid,
                 xform__kpi_asset_uid=self.asset.uid,
             )
