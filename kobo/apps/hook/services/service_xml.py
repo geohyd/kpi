@@ -10,8 +10,16 @@ class ServiceDefinition(ServiceDefinitionInterface):
         return strip_nodes(submission, fields, xml_declaration=True)
 
     def _prepare_request_kwargs(self):
-        return {
-            "headers": {"Content-Type": "application/xml"},
-            "data": self._data
-        }
+        # ANTEA : Try to send as utf-8 encoded XML data
+        # TODO : need a PR for this !
+        try:
+            return {
+                "headers": {"Content-Type": "application/xml"},
+                "data": self._data.encode('utf-8')
+            }
+        except Exception as e:
+            return {
+                "headers": {"Content-Type": "application/xml"},
+                "data": self._data
+            }
 

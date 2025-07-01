@@ -28,7 +28,10 @@ class ServiceDefinition(ServiceDefinitionInterface):
         # Pour limiter l'usage, on va limiter son usage à une liste de porjet
         # Pour que tous les futurs projet n'utilise pas cette fonctionnalité
         # Dans l'objetif qu'il n'y ai plus aucun projet et pouvoir totalement supprimer ce code
-        allow_xform_id_string = ['a7YdBKN7qhGU848HCA5zxJ', 'aoJCS3cPxbNDCxomwCqg4F', 'a2ioS8wirMSnEjrk9Ly5YV']
+        allow_xform_id_string = []
+        allow_xform_id_string.append('a2ioS8wirMSnEjrk9Ly5YV') # CET LOME - Victor
+        allow_xform_id_string.append('aoJCS3cPxbNDCxomwCqg4F') # CET LOME - Victor
+        allow_xform_id_string.append('aZ6tmAAD3EBcCrcE2vVG7i') # Rapport journalier - Jonathan
         allow_users = ['dm_eau_dali']
         try:
             _xform_id_string = submission.get('_xform_id_string')
