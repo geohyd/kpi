@@ -549,28 +549,66 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
                 t('Your submission XML is malformed.')
             )
         try:
-            #deprecated_uuid = xml_root.find('.//meta/deprecatedID').text
+            deprecated_uuid = xml_root.find('.//meta/deprecatedID').text
             xform_uuid = xml_root.find('.//formhub/uuid').text
-            root_uuid = xml_root.find('meta/rootUuid').text
+            #root_uuid = xml_root.find('meta/rootUuid').text
         except AttributeError:
             raise SubmissionIntegrityError(
                 t('Your submission XML is missing critical elements.')
             )
         # Remove UUID prefix
-        #deprecated_uuid = deprecated_uuid[len('uuid:'):]
-        root_uuid = root_uuid[len('uuid:'):]
+        deprecated_uuid = deprecated_uuid[len('uuid:'):]
+        #root_uuid = root_uuid[len('uuid:'):]
         try:
             instance = ReadOnlyKobocatInstance.objects.get(
-                root_uuid=root_uuid,
+                uuid=deprecated_uuid,
                 xform__uuid=xform_uuid,
                 xform__kpi_asset_uid=self.asset.uid,
             )
         except ReadOnlyKobocatInstance.DoesNotExist:
-            raise SubmissionIntegrityError(
-                t(
-                    'The submission you attempted to edit could not be found, '
-                    'or you do not have access to it.'
+            # raise SubmissionIntegrityError(
+            #     t(
+            #         'The submission you attempted to edit could not be found, '
+            #         'or you do not have access to it.'
+            #     )
+            # )
+            print("Fallback lookup: deprecated_uuid not found, trying rootUuid", flush=True)
+            instance_uuid = xml_root.find('.//meta/instanceID').text
+            deprecated_uuid = xml_root.find('.//meta/deprecatedID').text
+            root_uuid = xml_root.find('meta/rootUuid').text
+
+            # Search via Mongo or via fallback submissions
+            candidates = list(self.get_submissions(
+                user=user,
+                format_type=SUBMISSION_FORMAT_TYPE_JSON,
+                query={
+                    '$or': [
+                        {'meta/deprecatedID': deprecated_uuid},
+                        {'meta/instanceID': instance_uuid},
+                        {'meta/rootUuid': root_uuid},
+                        {'_uuid': deprecated_uuid},
+                    ]
+                },
+            ))
+
+            if not candidates:
+                raise SubmissionIntegrityError(
+                    t(
+                        'The submission you attempted to edit could not be found '
+                        'even by its root identifier.'
+                    )
                 )
+
+            submission_id = candidates[0].get('_id')
+            if not submission_id:
+                raise SubmissionIntegrityError(
+                    t('Submission found but has no valid identifier.')
+                )
+
+            instance = ReadOnlyKobocatInstance.objects.get(
+                id=submission_id,
+                xform__uuid=xform_uuid,
+                xform__kpi_asset_uid=self.asset.uid,
             )
 
         # Validate write access for users with partial permissions
@@ -1681,6 +1719,96 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
             return submission
 
         for attachment in submission['_attachments']:
+            # We should use 'attachment-list' with `?xpath=` but we do not
+            # know what the XPath is here so we will use the uid to build the url.
+            #if is_uid_missing:
+                # Add uid to attachment data
+            #    attachment['uid'] = attachment_map.get(attachment['id'])
+
+            kpi_url = reverse(
+                'attachment-detail',
+                args=(self.asset.uid, submission['_id'], attachment['id']),
+                request=request,
+            )
+            # kpi_url = reverse(
+            #          'attachment-detail',
+            #          args=(self.asset.uid, submission['_id'], attachment['id']),
+            #          request=request,
+            #      )
+            key = f'download_url'
+            attachment[key] = kpi_url
+            if attachment['mimetype'].startswith('image/'):
+                for suffix in settings.THUMB_CONF.keys():
+                    kpi_url = reverse(
+                        'attachment-thumb',
+                        args=(self.asset.uid, submission['_id'], attachment['id'], suffix,),
+                        request=request,
+                    )
+                    # kpi_url = reverse(
+                    #     'attachment-thumb',
+                    #     args=(
+                    #         self.asset.uid,
+                    #         submission['_id'],
+                    #         attachment['uid'],
+                    #         suffix,
+                    #     ),
+                    #     request=request,
+                    # )
+                    key = f'download_{suffix}_url'
+                    attachment[key] = kpi_url
+            else:
+                for suffix in settings.THUMB_CONF.keys():
+                    try:
+                        key = f'download_{suffix}_url'
+                        del attachment[key]
+                    except KeyError:
+                        continue
+            #import os
+            #filename = attachment['filename']
+            #attachment['filename'] = os.path.join(
+            #    self.asset.owner.username,
+            #     'attachments',
+            #     # KoboCAT accepts submissions even when they lack `formhub/uuid`
+            #     self.form_uuid or submission['formhub/uuid'],
+            #     submission['_uuid'],
+            #     os.path.basename(filename)
+            # )
+
+            # Retrieve XPath and add it to attachment dictionary
+            #basename = os.path.basename(attachment['filename'])
+            #attachment['question_xpath'] = filenames_and_xpaths.get(
+            #    basename,
+            #    filenames_and_xpaths.get(self._without_suffix(basename), ''),
+            #)
+
+            # Remove unwanted keys
+            if 'instance' in attachment:
+                del attachment['instance']
+            if 'xform' in attachment:
+                del attachment['xform']
+            if 'id' in attachment:
+                del attachment['id']
+
+        # for attachment in submission['_attachments']:
+        #     for size, suffix in settings.KOBOCAT_THUMBNAILS_SUFFIX_MAPPING.items():
+        #         print("suffix : ", suffix, flush=True)
+        #         # We should use 'attachment-list' with `?xpath=` but we do not
+        #         # know what the XPath is here. Since the primary key is already
+        #         # exposed, let's use it to build the url with 'attachment-detail'
+        #         kpi_url = reverse(
+        #             'attachment-detail',
+        #             args=(self.asset.uid, submission['_id'], attachment['id']),
+        #             request=request,
+        #         )
+        #         print("kpi_url : ", kpi_url, flush=True)
+        #         key = f'download{suffix}_url'
+        #         try:
+        #             attachment[key] = kpi_url
+        #         except KeyError:
+        #             continue
+
+        return submission
+        """for attachment in submission['_attachments']:
             for size, suffix in settings.KOBOCAT_THUMBNAILS_SUFFIX_MAPPING.items():
                 # We should use 'attachment-list' with `?xpath=` but we do not
                 # know what the XPath is here. Since the primary key is already
@@ -1696,7 +1824,7 @@ class KobocatDeploymentBackend(BaseDeploymentBackend):
                 except KeyError:
                     continue
 
-        return submission
+        return submission"""
 
     def __save_kc_metadata(self, file_: SyncBackendMediaInterface):
         """
